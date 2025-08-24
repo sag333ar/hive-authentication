@@ -215,13 +215,29 @@ Set `VITE_LOCAL_KEY` for AES encryption of local storage data:
 VITE_LOCAL_KEY=your-secret-encryption-key
 ```
 
-### Tailwind CSS
+### CSS and Styling
 
-The package uses Tailwind CSS with daisyUI. Make sure your project has Tailwind CSS configured.
+The package includes a pre-built CSS file that you can import to avoid CSS conflicts:
 
-### DaisyUI
+#### Import CSS File (Recommended)
+```tsx
+import 'hive-authentication/build.css';
+```
 
-The package includes daisyUI components. No additional configuration needed.
+#### Alternative Import Path
+```tsx
+import 'hive-authentication/dist/build.css';
+```
+
+#### Manual CSS Import
+If you prefer to handle CSS yourself, you can copy the `dist/build.css` file and import it in your project.
+
+#### Tailwind CSS
+The package uses Tailwind CSS with custom component styles. The build.css file includes all necessary styles.
+
+### CSS Conflict Resolution
+
+The build.css file is designed to avoid conflicts with your existing styles. If you still experience issues, see our [CSS Conflict Resolution Guide](./docs/CSS-CONFLICTS.md).
 
 ## Practical Examples
 

@@ -123,3 +123,34 @@ export const CustomStylingExample: React.FC = () => {
     </div>
   );
 };
+
+// Example 5: CSS import example
+export const CSSImportExample: React.FC = () => {
+  const { currentUser } = useAuthStore();
+  
+  return (
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">CSS Import Example</h1>
+      <p className="mb-4">This example shows how to import the CSS file to avoid conflicts.</p>
+      
+      <div className="mb-4">
+        <AuthButton />
+      </div>
+      
+      {currentUser && (
+        <div className="p-4 border rounded-lg">
+          <h3 className="font-semibold mb-2">Current User</h3>
+          <p>Username: {currentUser.username}</p>
+          <p>Type: {currentUser.type}</p>
+        </div>
+      )}
+      
+      <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+        <h3 className="font-semibold mb-2">CSS Import Instructions</h3>
+        <p className="text-sm text-gray-600">
+          Import the CSS file in your app: <code>import 'hive-authentication/build.css';</code>
+        </p>
+      </div>
+    </div>
+  );
+};

@@ -46,7 +46,7 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({ isOpen, onClos
     );
   }
   
-  return (
+    return (
     <div className="modal modal-open">
       <div className="modal-box relative max-w-md">
         <button
