@@ -89,15 +89,20 @@
   width: 3rem !important;
   height: 3rem !important;
   padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .btn-ghost {
   background-color: transparent !important;
   border-color: transparent !important;
+  color: #6b7280 !important;
 }
 
 .btn-ghost:hover {
   background-color: #f3f4f6 !important;
+  color: #374151 !important;
 }
 
 /* Modal */
@@ -130,6 +135,7 @@
   overflow-y: auto !important;
   padding: 1.5rem !important;
   position: relative !important;
+  z-index: 10000 !important;
 }
 
 .modal-backdrop {
@@ -416,6 +422,10 @@
 /* Z-index management to avoid conflicts */
 .modal {
   z-index: 9999 !important;
+}
+
+.modal-box {
+  z-index: 10000 !important;
 }
 
 .modal-backdrop {
