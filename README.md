@@ -70,6 +70,54 @@ function App() {
 }
 ```
 
+### Event-Driven Authentication State Handling
+
+The package provides an event system to handle authentication state changes:
+
+```tsx
+import { addAuthEventListener } from 'hive-authentication';
+import { useEffect } from 'react';
+
+function MyApp() {
+  useEffect(() => {
+    // Listen to authentication events
+    const unsubscribe = addAuthEventListener((event) => {
+      switch (event.type) {
+        case 'login':
+          console.log('User logged in:', event.user?.username);
+          // Update your app state, show welcome message, etc.
+          break;
+          
+        case 'logout':
+          console.log('User logged out:', event.previousUser?.username);
+          // Clear app state, redirect to login, etc.
+          break;
+          
+        case 'user_switch':
+          console.log('User switched from', event.previousUser?.username, 'to', event.user?.username);
+          // Update UI, refresh user-specific data, etc.
+          break;
+          
+        case 'user_add':
+          console.log('New user added:', event.user?.username);
+          // Update user list, show notification, etc.
+          break;
+          
+        case 'user_remove':
+          console.log('User removed:', event.username);
+          // Update user list, show notification, etc.
+          break;
+      }
+    });
+    
+    // Cleanup listener on unmount
+    return unsubscribe;
+  }, []);
+  
+  return <div>Your app content</div>;
+}
+```
+
 ### SwitchUserModal
 
 A modal for managing multiple logged-in accounts:
@@ -135,6 +183,14 @@ Zustand store for state management:
 - `removeLoggedInUser(username)`: Remove user
 - `clearAllUsers()`: Clear all users
 
+### addAuthEventListener
+
+Event listener for authentication state changes:
+
+- `addAuthEventListener(callback)`: Listen to auth events
+- Returns unsubscribe function for cleanup
+- Events: `login`, `logout`, `user_switch`, `user_add`, `user_remove`
+
 ## Types
 
 ```tsx
@@ -166,6 +222,94 @@ The package uses Tailwind CSS with daisyUI. Make sure your project has Tailwind 
 ### DaisyUI
 
 The package includes daisyUI components. No additional configuration needed.
+
+## Practical Examples
+
+### Handling Auth State Changes in Your App
+
+When using the `AuthButton` in your app, you can listen to authentication events to update your UI:
+
+```tsx
+// my-page-x.tsx
+import React, { useEffect, useState } from 'react';
+import { AuthButton, addAuthEventListener, useAuthStore } from 'hive-authentication';
+
+function MyPageX() {
+  const { currentUser } = useAuthStore();
+  const [userData, setUserData] = useState(null);
+  
+  useEffect(() => {
+    // Listen to authentication events
+    const unsubscribe = addAuthEventListener((event) => {
+      switch (event.type) {
+        case 'login':
+          console.log('User logged in:', event.user?.username);
+          // Load user-specific data
+          loadUserData(event.user?.username);
+          break;
+          
+        case 'logout':
+          console.log('User logged out');
+          // Clear user data, redirect, etc.
+          setUserData(null);
+          // Maybe redirect to login page
+          break;
+          
+        case 'user_switch':
+          console.log('User switched to:', event.user?.username);
+          // Load data for the new user
+          loadUserData(event.user?.username);
+          break;
+      }
+    });
+    
+    // Load initial data if user is already logged in
+    if (currentUser) {
+      loadUserData(currentUser.username);
+    }
+    
+    return unsubscribe;
+  }, [currentUser]);
+  
+  const loadUserData = async (username: string) => {
+    if (!username) return;
+    
+    try {
+      // Load user-specific data from your API
+      const response = await fetch(`/api/user/${username}/data`);
+      const data = await response.json();
+      setUserData(data);
+    } catch (error) {
+      console.error('Failed to load user data:', error);
+    }
+  };
+  
+  return (
+    <div>
+      {/* Your app content */}
+      <div className="user-info">
+        {currentUser ? (
+          <p>Welcome, {currentUser.username}!</p>
+        ) : (
+          <p>Please log in</p>
+        )}
+      </div>
+      
+      {/* Auth button in top right corner */}
+      <div className="auth-button">
+        <AuthButton />
+      </div>
+      
+      {/* Display user data */}
+      {userData && (
+        <div className="user-data">
+          {/* Your user-specific content */}
+        </div>
+      )}
+    </div>
+  );
+}
+```
 
 ## Development
 

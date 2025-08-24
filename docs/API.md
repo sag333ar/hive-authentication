@@ -89,6 +89,43 @@ Zustand store hook for authentication state management.
 }
 ```
 
+### addAuthEventListener
+
+Event listener for authentication state changes.
+
+#### Usage
+
+```tsx
+import { addAuthEventListener } from 'hive-authentication';
+
+const unsubscribe = addAuthEventListener((event) => {
+  // Handle auth events
+  console.log('Auth event:', event);
+});
+
+// Cleanup when done
+unsubscribe();
+```
+
+#### Event Types
+
+- **`login`**: User logged in
+- **`logout`**: User logged out  
+- **`user_switch`**: User switched to different account
+- **`user_add`**: New user added
+- **`user_remove`**: User removed
+
+#### Event Object Structure
+
+```tsx
+interface AuthEvent {
+  type: AuthEventType;
+  user?: LoggedInUser;        // Current user (for login, user_switch, user_add)
+  previousUser?: LoggedInUser; // Previous user (for logout, user_switch)
+  username?: string;          // Username (for user_remove)
+}
+```
+
 #### Usage
 
 ```tsx

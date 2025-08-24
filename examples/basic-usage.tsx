@@ -1,5 +1,5 @@
-import React from 'react';
-import { AuthButton, useAuthStore } from 'hive-authentication';
+import React, { useEffect } from 'react';
+import { AuthButton, useAuthStore, addAuthEventListener } from 'hive-authentication';
 
 // Example 1: Basic usage
 export const BasicExample: React.FC = () => {
@@ -51,7 +51,55 @@ export const AdvancedExample: React.FC = () => {
   );
 };
 
-// Example 3: Custom styling
+// Example 3: Event-driven auth state handling
+export const EventDrivenExample: React.FC = () => {
+  const { currentUser } = useAuthStore();
+  
+  useEffect(() => {
+    // Listen to all authentication events
+    const unsubscribe = addAuthEventListener((event) => {
+      switch (event.type) {
+        case 'login':
+          console.log('User logged in:', event.user?.username);
+          // Update your app state, show welcome message, etc.
+          break;
+          
+        case 'logout':
+          console.log('User logged out:', event.previousUser?.username);
+          // Clear app state, redirect to login, etc.
+          break;
+          
+        case 'user_switch':
+          console.log('User switched from', event.previousUser?.username, 'to', event.user?.username);
+          // Update UI, refresh user-specific data, etc.
+          break;
+          
+        case 'user_add':
+          console.log('New user added:', event.user?.username);
+          // Update user list, show notification, etc.
+          break;
+          
+        case 'user_remove':
+          console.log('User removed:', event.username);
+          // Update user list, show notification, etc.
+          break;
+      }
+    });
+    
+    // Cleanup listener on unmount
+    return unsubscribe;
+  }, []);
+  
+  return (
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Event-Driven Example</h1>
+      <p className="mb-4">Check console for auth events</p>
+      <AuthButton />
+    </div>
+  );
+};
+
+// Example 4: Custom styling
 export const CustomStylingExample: React.FC = () => {
   return (
     <div className="p-4 bg-gradient-to-r from-blue-500 to-purple-600 min-h-screen">

@@ -2,6 +2,18 @@ import { create } from 'zustand';
 import type { LoggedInUser, AuthStore } from '../types/auth';
 import CryptoJS from 'crypto-js';
 
+// Event system for auth state changes
+type AuthEventType = 'login' | 'logout' | 'user_switch' | 'user_add' | 'user_remove';
+
+interface AuthEvent {
+  type: AuthEventType;
+  user?: LoggedInUser;
+  previousUser?: LoggedInUser;
+  username?: string;
+}
+
+type AuthEventListener = (event: AuthEvent) => void;
+
 const ENCRYPTION_KEY = import.meta.env.VITE_LOCAL_KEY || 'default-key';
 
 const encryptData = (data: any): string => {
@@ -17,6 +29,23 @@ const decryptData = (encryptedData: string): any => {
     console.error('Failed to decrypt data:', error);
     return null;
   }
+};
+
+// Event system
+const eventListeners: AuthEventListener[] = [];
+
+const emitEvent = (event: AuthEvent) => {
+  eventListeners.forEach(listener => listener(event));
+};
+
+const addEventListener = (listener: AuthEventListener) => {
+  eventListeners.push(listener);
+  return () => {
+    const index = eventListeners.indexOf(listener);
+    if (index > -1) {
+      eventListeners.splice(index, 1);
+    }
+  };
 };
 
 // Clean up any old plain text storage
@@ -64,7 +93,20 @@ export const useAuthStore = create<AuthStore>((set, get) => {
     loggedInUsers: initialState.loggedInUsers,
     
     setCurrentUser: (user: LoggedInUser | null) => {
+      const previousUser = get().currentUser;
       set({ currentUser: user });
+      
+      // Emit events based on what happened
+      if (previousUser && !user) {
+        // User logged out
+        emitEvent({ type: 'logout', previousUser });
+      } else if (!previousUser && user) {
+        // User logged in
+        emitEvent({ type: 'login', user });
+      } else if (previousUser && user && previousUser.username !== user.username) {
+        // User switched
+        emitEvent({ type: 'user_switch', user, previousUser });
+      }
       
       // Only store encrypted data, never plain text
       if (user) {
@@ -89,6 +131,9 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       
       set({ loggedInUsers: updatedUsers });
       
+      // Emit event for new user added
+      emitEvent({ type: 'user_add', user });
+      
       // Only store encrypted data
       const encryptedUsers = encryptData(updatedUsers);
       localStorage.setItem('logged-in-users', encryptedUsers);
@@ -96,9 +141,15 @@ export const useAuthStore = create<AuthStore>((set, get) => {
     
     removeLoggedInUser: (username: string) => {
       const { loggedInUsers, currentUser } = get();
+      const userToRemove = loggedInUsers.find(u => u.username === username);
       const updatedUsers = loggedInUsers.filter(u => u.username !== username);
       
       set({ loggedInUsers: updatedUsers });
+      
+      // Emit event for user removed
+      if (userToRemove) {
+        emitEvent({ type: 'user_remove', username, user: userToRemove });
+      }
       
       // If removing current user, clear current user
       if (currentUser?.username === username) {
@@ -112,9 +163,19 @@ export const useAuthStore = create<AuthStore>((set, get) => {
     },
     
     clearAllUsers: () => {
+      const previousUser = get().currentUser;
       set({ currentUser: null, loggedInUsers: [] });
+      
+      // Emit logout event if there was a current user
+      if (previousUser) {
+        emitEvent({ type: 'logout', previousUser });
+      }
+      
       localStorage.removeItem('logged-in-user');
       localStorage.removeItem('logged-in-users');
     },
   };
 });
+
+// Export the event listener function
+export const addAuthEventListener = addEventListener;
