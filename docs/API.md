@@ -184,6 +184,8 @@ async function serverAuth(challenge: string, username: string, pubkey: string, p
 }
 ```
 
+**Note**: The `challenge` field should contain the hash returned from Hive authentication, and the `proof` field should contain the timestamp used during Hive authentication.
+
 ## Types
 
 ### LoggedInUser

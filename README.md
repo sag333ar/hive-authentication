@@ -6,8 +6,10 @@ A React package for Hive blockchain authentication with a beautiful daisyUI-base
 
 - 🔐 Hive blockchain authentication using @aioha/aioha
 - 🎨 Beautiful UI components built with daisyUI and Tailwind CSS
-- 📱 Mobile-responsive design
-- 🔒 Secure local storage with AES encryption
+- 📱 Mobile-responsive design with bottom-up modals
+- 🔒 **Secure encrypted storage** - No plain text data in localStorage
+- 👥 **Multi-user support** - Switch between multiple accounts
+- 🔄 **Switch User Modal** - Easy account management
 - 🚀 Built with Vite and TypeScript
 - 📦 Zero-configuration setup
 
@@ -68,6 +70,32 @@ function App() {
 }
 ```
 
+### SwitchUserModal
+
+A modal for managing multiple logged-in accounts:
+
+- **User List**: Shows all logged-in users with avatars and types
+- **Current User**: Highlights the active user with "Current" badge
+- **Switch Users**: Click on any user to switch to that account
+- **Logout Individual**: Logout specific users (except current)
+- **Add Account**: Add new accounts without closing the modal
+- **Logout All**: Clear all accounts and return to login state
+
+```tsx
+import { SwitchUserModal } from 'hive-authentication';
+
+function UserManagement() {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <SwitchUserModal 
+      isOpen={isOpen} 
+      onClose={() => setIsOpen(false)} 
+    />
+  );
+}
+```
+
 ## Components
 
 ### AuthButton
@@ -121,13 +149,23 @@ interface LoggedInUser {
 }
 ```
 
-## Environment Variables
+## Configuration
+
+### Environment Variables
 
 Set `VITE_LOCAL_KEY` for AES encryption of local storage data:
 
 ```env
 VITE_LOCAL_KEY=your-secret-encryption-key
 ```
+
+### Tailwind CSS
+
+The package uses Tailwind CSS with daisyUI. Make sure your project has Tailwind CSS configured.
+
+### DaisyUI
+
+The package includes daisyUI components. No additional configuration needed.
 
 ## Development
 

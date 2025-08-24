@@ -5,9 +5,16 @@ import { useAuthStore } from '../store/authStore';
 interface LoginDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  showBackButton?: boolean;
+  onBack?: () => void;
 }
 
-export const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose }) => {
+export const LoginDialog: React.FC<LoginDialogProps> = ({ 
+  isOpen, 
+  onClose, 
+  showBackButton = false, 
+  onBack 
+}) => {
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -60,14 +67,27 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose }) => 
   return (
     <div className="modal modal-open">
       <div className="modal-box relative">
-        <button
-          className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-          onClick={onClose}
-        >
-          ✕
-        </button>
-        
-        <h3 className="font-bold text-lg mb-4">Login with Hive</h3>
+        <div className="flex items-center justify-between mb-4">
+          {showBackButton && (
+            <button
+              className="btn btn-sm btn-circle btn-ghost"
+              onClick={onBack}
+            >
+              ←
+            </button>
+          )}
+          
+          <h3 className="font-bold text-lg flex-1 text-center">
+            {showBackButton ? 'Add Account' : 'Login with Hive'}
+          </h3>
+          
+          <button
+            className="btn btn-sm btn-circle btn-ghost"
+            onClick={onClose}
+          >
+            ✕
+          </button>
+        </div>
         
         <div className="form-control w-full">
           <label className="label">
@@ -75,16 +95,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose }) => 
           </label>
           
           <div className="flex items-center gap-3">
-            <input
-              type="text"
-              placeholder="Enter username"
-              className="input input-bordered flex-1"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              onKeyPress={handleKeyPress}
-              disabled={isLoading}
-            />
-            
             {avatarUrl && (
               <div className="avatar">
                 <div className="w-12 h-12 rounded-full">
@@ -99,6 +109,16 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose }) => 
                 </div>
               </div>
             )}
+            
+            <input
+              type="text"
+              placeholder="Enter username"
+              className="input input-bordered flex-1"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={isLoading}
+            />
           </div>
         </div>
         

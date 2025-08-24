@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { LoginDialog } from './LoginDialog';
+import { SwitchUserModal } from './SwitchUserModal';
 
 export const AuthButton: React.FC = () => {
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
-  const { currentUser, setCurrentUser } = useAuthStore();
-  
-  const handleLogout = () => {
-    setCurrentUser(null);
-  };
+  const [isSwitchUserModalOpen, setIsSwitchUserModalOpen] = useState(false);
+  const { currentUser } = useAuthStore();
   
   const handleButtonClick = () => {
     if (currentUser) {
-      // Show user menu or logout
-      handleLogout();
+      // Show switch user modal
+      setIsSwitchUserModalOpen(true);
     } else {
       // Open login dialog
       setIsLoginDialogOpen(true);
@@ -54,6 +52,11 @@ export const AuthButton: React.FC = () => {
       <LoginDialog
         isOpen={isLoginDialogOpen}
         onClose={() => setIsLoginDialogOpen(false)}
+      />
+      
+      <SwitchUserModal
+        isOpen={isSwitchUserModalOpen}
+        onClose={() => setIsSwitchUserModalOpen(false)}
       />
     </>
   );

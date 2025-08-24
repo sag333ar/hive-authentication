@@ -1,8 +1,9 @@
 export interface HiveAuthResult {
   provider: string;
-  result: any;
+  challenge: string;  // This will be a hash from the Hive authentication
   publicKey: string;
   username: string;
+  proof: string;      // This will be the timestamp
 }
 
 export interface ServerAuthResponse {

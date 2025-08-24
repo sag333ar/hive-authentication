@@ -1,0 +1,133 @@
+import React, { useState } from 'react';
+import { useAuthStore } from '../store/authStore';
+import { LoginDialog } from './LoginDialog';
+
+interface SwitchUserModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({ isOpen, onClose }) => {
+  const [showAddAccount, setShowAddAccount] = useState(false);
+  const { currentUser, loggedInUsers, setCurrentUser, removeLoggedInUser, clearAllUsers } = useAuthStore();
+  
+  const handleSwitchUser = (user: any) => {
+    setCurrentUser(user);
+    onClose();
+  };
+  
+  const handleLogoutUser = (username: string) => {
+    removeLoggedInUser(username);
+  };
+  
+  const handleLogoutAll = () => {
+    clearAllUsers();
+    onClose();
+  };
+  
+  const handleAddAccount = () => {
+    setShowAddAccount(true);
+  };
+  
+  const handleBackFromLogin = () => {
+    setShowAddAccount(false);
+  };
+  
+  if (!isOpen) return null;
+  
+  if (showAddAccount) {
+    return (
+      <LoginDialog 
+        isOpen={true} 
+        onClose={handleBackFromLogin}
+        showBackButton={true}
+        onBack={handleBackFromLogin}
+      />
+    );
+  }
+  
+  return (
+    <div className="modal modal-open">
+      <div className="modal-box relative max-w-md">
+        <button
+          className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+          onClick={onClose}
+        >
+          ✕
+        </button>
+        
+        <h3 className="font-bold text-lg mb-4">Switch User</h3>
+        
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {loggedInUsers.map((user) => (
+            <div 
+              key={user.username} 
+              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                currentUser?.username === user.username 
+                  ? 'border-primary bg-primary/10' 
+                  : 'border-base-300 hover:border-primary/50'
+              }`}
+              onClick={() => handleSwitchUser(user)}
+            >
+              {/* Avatar */}
+              <div className="avatar">
+                <div className="w-10 h-10 rounded-full">
+                  <img 
+                    src={`https://images.hive.blog/u/${user.username}/avatar`}
+                    alt={`${user.username} avatar`}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.hive.blog/u/0/avatar';
+                    }}
+                  />
+                </div>
+              </div>
+              
+              {/* Username */}
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">{user.username}</p>
+                <p className="text-sm text-gray-500 capitalize">{user.type}</p>
+              </div>
+              
+              {/* Status/Action */}
+              <div className="flex items-center gap-2">
+                {currentUser?.username === user.username ? (
+                  <span className="badge badge-primary badge-sm">Current</span>
+                ) : (
+                  <button
+                    className="btn btn-xs btn-outline btn-error"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLogoutUser(user.username);
+                    }}
+                  >
+                    Logout
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Bottom Actions */}
+        <div className="modal-action flex-col gap-2">
+          <button
+            className="btn btn-primary w-full"
+            onClick={handleAddAccount}
+          >
+            Add Account
+          </button>
+          
+          <button
+            className="btn btn-outline btn-error w-full"
+            onClick={handleLogoutAll}
+          >
+            Logout All
+          </button>
+        </div>
+      </div>
+      
+      {/* Backdrop */}
+      <div className="modal-backdrop" onClick={onClose}></div>
+    </div>
+  );
+};

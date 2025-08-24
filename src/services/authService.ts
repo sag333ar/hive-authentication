@@ -1,33 +1,37 @@
-import { initAioha, Providers } from '@aioha/aioha';
+import { initAioha, KeyTypes, Providers } from '@aioha/aioha';
 import type { HiveAuthResult, ServerAuthResponse, LoggedInUser } from '../types/auth';
 
 const aioha = initAioha();
 
 export class AuthService {
   static async loginWithHive(username: string): Promise<HiveAuthResult> {
-    const challenge = new Date().toISOString(); // Current timestamp as proof
+    const timestamp = new Date().toISOString(); // Current timestamp as proof
     
     try {
       const result = await aioha.login(Providers.Keychain, username, {
-        msg: challenge,
+        msg: timestamp,
+        keyType: KeyTypes.Posting,
+        loginTitle: 'Login with Hive',
       });
-      
-      if ('error' in result) {
+
+      if (!result.success) {
+        console.error('Hive login failed:', result.error);
         throw new Error(result.error);
       }
-      
+
       return {
         provider: 'keychain',
-        result: result,
+        challenge: result.result || '',  // This should be the hash from Hive auth
         publicKey: result.publicKey || '',
         username: result.username || username,
+        proof: timestamp,  // This is the timestamp we sent
       };
     } catch (error) {
       console.error('Hive login failed:', error);
       throw new Error('Hive authentication failed');
     }
   }
-  
+
   static async authenticateWithServer(
     challenge: string,
     username: string,
@@ -35,10 +39,12 @@ export class AuthService {
     proof: string
   ): Promise<ServerAuthResponse> {
     try {
-      const response = await fetch('https://beta-api.distriator.com/api/login', {
+      const response = await fetch('https://beta-api.distriator.com/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Referer': 'https://distriator.com/',
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
         },
         body: JSON.stringify({
           challenge,
@@ -62,31 +68,31 @@ export class AuthService {
       throw new Error('Server authentication failed');
     }
   }
-  
+
   static async completeLogin(username: string): Promise<LoggedInUser> {
     try {
       // Step 1: Login with Hive
       const hiveResult = await this.loginWithHive(username);
-      
+
       // Step 2: Authenticate with server
       const serverResult = await this.authenticateWithServer(
-        hiveResult.result.msg || new Date().toISOString(), // challenge
-        username,
+        hiveResult.challenge,  // The hash from Hive auth
+        hiveResult.username,
         hiveResult.publicKey,
-        hiveResult.result.msg || new Date().toISOString() // proof (same as challenge)
+        hiveResult.proof,      // The timestamp
       );
-      
+
       // Step 3: Create complete user object
       const user: LoggedInUser = {
         username,
         provider: hiveResult.provider,
-        challenge: hiveResult.result.msg || new Date().toISOString(),
+        challenge: hiveResult.challenge,
         publicKey: hiveResult.publicKey,
-        proof: hiveResult.result.msg || new Date().toISOString(),
+        proof: hiveResult.proof,
         token: serverResult.token,
         type: serverResult.type,
       };
-      
+
       return user;
     } catch (error) {
       console.error('Complete login failed:', error);
