@@ -8,7 +8,7 @@ export interface HiveAuthResult {
 
 export interface ServerAuthResponse {
   token: string;
-  type: 'admin' | 'guide' | 'owner' | 'user';
+  type: string;
 }
 
 export interface LoggedInUser {
@@ -17,21 +17,44 @@ export interface LoggedInUser {
   challenge: string;
   publicKey: string;
   proof: string;
-  token: string;
-  type: string;
+  serverResponse: string; // JSON string from dev's app
 }
 
 export interface AuthStore {
   currentUser: LoggedInUser | null;
   loggedInUsers: LoggedInUser[];
+  isLoading: boolean;
+  error: string | null;
+  
+  // Actions
   setCurrentUser: (user: LoggedInUser | null) => void;
   addLoggedInUser: (user: LoggedInUser) => void;
   removeLoggedInUser: (username: string) => void;
   clearAllUsers: () => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  
+  // New callback-based authentication
+  authenticateWithCallback: (
+    hiveResult: HiveAuthResult,
+    callback: (hiveResult: HiveAuthResult) => Promise<string>
+  ) => Promise<void>;
 }
+
+// Event types for the callback system
+export type AuthEventType = 'login' | 'logout' | 'user_switch' | 'user_add' | 'user_remove';
+
+export interface AuthEvent {
+  type: AuthEventType;
+  user?: LoggedInUser;
+  previousUser?: LoggedInUser;
+}
+
+export type AuthEventListener = (event: AuthEvent) => void;
 
 export interface LoginDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onLoginSuccess: (user: LoggedInUser) => void;
+  showBackButton?: boolean;
+  onBack?: () => void;
 }

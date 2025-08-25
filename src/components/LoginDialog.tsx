@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { AuthService } from '../services/authService';
 import { useAuthStore } from '../store/authStore';
-
-interface LoginDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  showBackButton?: boolean;
-  onBack?: () => void;
-}
+import { AuthService } from '../services/authService';
+import type { LoginDialogProps } from '../types/auth';
 
 export const LoginDialog: React.FC<LoginDialogProps> = ({ 
   isOpen, 
@@ -16,52 +10,69 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
   onBack 
 }) => {
   const [username, setUsername] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
-  const { setCurrentUser, addLoggedInUser } = useAuthStore();
-  
+  const { isLoading, authenticateWithCallback } = useAuthStore();
+
   useEffect(() => {
-    if (username) {
+    if (username.trim()) {
       setAvatarUrl(`https://images.hive.blog/u/${username}/avatar`);
     } else {
-      setAvatarUrl('');
+      setAvatarUrl(null);
     }
   }, [username]);
-  
+
   const handleLogin = async () => {
-    if (!username.trim()) {
-      setError('Please enter a username');
-      return;
-    }
+    if (!username.trim()) return;
     
-    setIsLoading(true);
-    setError('');
+    setError(null);
     
     try {
-      const user = await AuthService.completeLogin(username.trim());
+      // Initialize Aioha if needed
+      await AuthService.initialize();
       
-      // Store user in state and localStorage
-      addLoggedInUser(user);
-      setCurrentUser(user);
+      // First get the Hive authentication result
+      const hiveResult = await AuthService.loginWithHive(username.trim());
       
-      // Close dialog
+      // Use the callback-based authentication
+      await authenticateWithCallback(
+        hiveResult,
+        // This callback will be provided by the dev's app
+        // For now, we'll use a placeholder that simulates the old behavior
+        async (hiveResult) => {
+          // This is where the dev's app would make their API call
+          // For demonstration, we'll return a mock response
+          console.log('Hive authentication result:', hiveResult);
+          console.log('Your app should now call your API with these details:');
+          console.log('- challenge:', hiveResult.challenge);
+          console.log('- username:', hiveResult.username);
+          console.log('- pubkey:', hiveResult.publicKey);
+          console.log('- proof:', hiveResult.proof);
+          
+          // Return a mock JSON string response
+          // In real usage, this would be the response from your server
+          return JSON.stringify({
+            token: 'mock-jwt-token',
+            type: 'user',
+            message: 'This is a mock response. Replace with your actual server response.'
+          });
+        }
+      );
+      
       onClose();
-      setUsername('');
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Login failed');
-    } finally {
-      setIsLoading(false);
+      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      setError(errorMessage);
     }
   };
-  
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !isLoading) {
+    if (e.key === 'Enter' && username.trim() && !isLoading) {
       handleLogin();
     }
   };
-  
+
   if (!isOpen) return null;
   
   return (

@@ -1,181 +1,175 @@
 import { create } from 'zustand';
-import type { LoggedInUser, AuthStore } from '../types/auth';
 import CryptoJS from 'crypto-js';
+import type { AuthStore, LoggedInUser, AuthEvent, AuthEventListener } from '../types/auth';
 
-// Event system for auth state changes
-type AuthEventType = 'login' | 'logout' | 'user_switch' | 'user_add' | 'user_remove';
+// Event system
+const listeners: AuthEventListener[] = [];
 
-interface AuthEvent {
-  type: AuthEventType;
-  user?: LoggedInUser;
-  previousUser?: LoggedInUser;
-  username?: string;
-}
+const emitEvent = (event: AuthEvent) => {
+  listeners.forEach(listener => listener(event));
+};
 
-type AuthEventListener = (event: AuthEvent) => void;
+export const addAuthEventListener = (listener: AuthEventListener) => {
+  listeners.push(listener);
+  return () => {
+    const index = listeners.indexOf(listener);
+    if (index > -1) {
+      listeners.splice(index, 1);
+    }
+  };
+};
 
-const ENCRYPTION_KEY = import.meta.env.VITE_LOCAL_KEY || 'default-key';
-
+// Encryption/Decryption helpers
 const encryptData = (data: any): string => {
-  return CryptoJS.AES.encrypt(JSON.stringify(data), ENCRYPTION_KEY).toString();
+  const key = import.meta.env.VITE_LOCAL_KEY || 'default-key';
+  return CryptoJS.AES.encrypt(JSON.stringify(data), key).toString();
 };
 
 const decryptData = (encryptedData: string): any => {
   try {
-    const bytes = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY);
-    const decryptedString = bytes.toString(CryptoJS.enc.Utf8);
-    return JSON.parse(decryptedString);
+    const key = import.meta.env.VITE_LOCAL_KEY || 'default-key';
+    const bytes = CryptoJS.AES.decrypt(encryptedData, key);
+    const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+    return JSON.parse(decrypted);
   } catch (error) {
     console.error('Failed to decrypt data:', error);
     return null;
   }
 };
 
-// Event system
-const eventListeners: AuthEventListener[] = [];
-
-const emitEvent = (event: AuthEvent) => {
-  eventListeners.forEach(listener => listener(event));
-};
-
-const addEventListener = (listener: AuthEventListener) => {
-  eventListeners.push(listener);
-  return () => {
-    const index = eventListeners.indexOf(listener);
-    if (index > -1) {
-      eventListeners.splice(index, 1);
-    }
-  };
-};
-
-// Clean up any old plain text storage
+// Clean up old storage keys
 const cleanupOldStorage = () => {
-  // Remove any old Zustand persist storage that might contain plain text
-  localStorage.removeItem('auth-storage');
-  localStorage.removeItem('hive-auth-encrypted');
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('auth-storage');
+    localStorage.removeItem('hive-auth-encrypted');
+  }
 };
 
-// Initialize state from encrypted localStorage
+// Initialize state from localStorage
 const initializeState = () => {
-  // First clean up old storage
-  cleanupOldStorage();
+  if (typeof window === 'undefined') return { currentUser: null, loggedInUsers: [] };
   
   try {
-    const encryptedCurrentUser = localStorage.getItem('logged-in-user');
     const encryptedUsers = localStorage.getItem('logged-in-users');
+    const encryptedCurrentUser = localStorage.getItem('logged-in-user');
     
-    let currentUser = null;
-    let loggedInUsers: LoggedInUser[] = [];
+    const users = encryptedUsers ? decryptData(encryptedUsers) : [];
+    const currentUser = encryptedCurrentUser ? decryptData(encryptedCurrentUser) : null;
     
-    if (encryptedCurrentUser) {
-      currentUser = decryptData(encryptedCurrentUser);
-    }
-    
-    if (encryptedUsers) {
-      loggedInUsers = decryptData(encryptedUsers) || [];
-    }
-    
-    return { currentUser, loggedInUsers };
+    return { currentUser, loggedInUsers: users || [] };
   } catch (error) {
     console.error('Failed to initialize auth state:', error);
-    // Clear corrupted data
-    localStorage.removeItem('logged-in-user');
-    localStorage.removeItem('logged-in-users');
     return { currentUser: null, loggedInUsers: [] };
   }
 };
 
 export const useAuthStore = create<AuthStore>((set, get) => {
+  // Initialize state
   const initialState = initializeState();
+  cleanupOldStorage();
   
   return {
-    currentUser: initialState.currentUser,
-    loggedInUsers: initialState.loggedInUsers,
+    ...initialState,
+    isLoading: false,
+    error: null,
     
-    setCurrentUser: (user: LoggedInUser | null) => {
+    setLoading: (loading) => set({ isLoading: loading }),
+    
+    setError: (error) => set({ error }),
+    
+    setCurrentUser: (user) => {
       const previousUser = get().currentUser;
-      set({ currentUser: user });
       
-      // Emit events based on what happened
-      if (previousUser && !user) {
-        // User logged out
-        emitEvent({ type: 'logout', previousUser });
-      } else if (!previousUser && user) {
-        // User logged in
-        emitEvent({ type: 'login', user });
-      } else if (previousUser && user && previousUser.username !== user.username) {
-        // User switched
-        emitEvent({ type: 'user_switch', user, previousUser });
-      }
-      
-      // Only store encrypted data, never plain text
+      // Encrypt and store
       if (user) {
         const encryptedUser = encryptData(user);
         localStorage.setItem('logged-in-user', encryptedUser);
       } else {
         localStorage.removeItem('logged-in-user');
       }
+      
+      set({ currentUser: user });
+      
+      // Emit events
+      if (previousUser && !user) {
+        emitEvent({ type: 'logout', previousUser });
+      } else if (!previousUser && user) {
+        emitEvent({ type: 'login', user });
+      } else if (previousUser && user && previousUser.username !== user.username) {
+        emitEvent({ type: 'user_switch', user, previousUser });
+      }
     },
     
-    addLoggedInUser: (user: LoggedInUser) => {
+    addLoggedInUser: (user) => {
       const { loggedInUsers } = get();
-      const existingUserIndex = loggedInUsers.findIndex(u => u.username === user.username);
+      const updatedUsers = [...loggedInUsers.filter(u => u.username !== user.username), user];
       
-      let updatedUsers;
-      if (existingUserIndex >= 0) {
-        updatedUsers = [...loggedInUsers];
-        updatedUsers[existingUserIndex] = user;
-      } else {
-        updatedUsers = [...loggedInUsers, user];
-      }
-      
-      set({ loggedInUsers: updatedUsers });
-      
-      // Emit event for new user added
-      emitEvent({ type: 'user_add', user });
-      
-      // Only store encrypted data
+      // Encrypt and store
       const encryptedUsers = encryptData(updatedUsers);
       localStorage.setItem('logged-in-users', encryptedUsers);
+      
+      set({ loggedInUsers: updatedUsers });
+      emitEvent({ type: 'user_add', user });
     },
     
-    removeLoggedInUser: (username: string) => {
+    removeLoggedInUser: (username) => {
       const { loggedInUsers, currentUser } = get();
       const userToRemove = loggedInUsers.find(u => u.username === username);
       const updatedUsers = loggedInUsers.filter(u => u.username !== username);
       
-      set({ loggedInUsers: updatedUsers });
-      
-      // Emit event for user removed
-      if (userToRemove) {
-        emitEvent({ type: 'user_remove', username, user: userToRemove });
-      }
+      // Encrypt and store
+      const encryptedUsers = encryptData(updatedUsers);
+      localStorage.setItem('logged-in-users', encryptedUsers);
       
       // If removing current user, clear current user
       if (currentUser?.username === username) {
-        set({ currentUser: null });
         localStorage.removeItem('logged-in-user');
+        set({ currentUser: null, loggedInUsers: updatedUsers });
+        emitEvent({ type: 'logout', previousUser: currentUser });
+      } else {
+        set({ loggedInUsers: updatedUsers });
       }
       
-      // Only store encrypted data
-      const encryptedUsers = encryptData(updatedUsers);
-      localStorage.setItem('logged-in-users', encryptedUsers);
+      if (userToRemove) {
+        emitEvent({ type: 'user_remove', user: userToRemove });
+      }
     },
     
     clearAllUsers: () => {
-      const previousUser = get().currentUser;
-      set({ currentUser: null, loggedInUsers: [] });
-      
-      // Emit logout event if there was a current user
-      if (previousUser) {
-        emitEvent({ type: 'logout', previousUser });
-      }
-      
-      localStorage.removeItem('logged-in-user');
       localStorage.removeItem('logged-in-users');
+      localStorage.removeItem('logged-in-user');
+      set({ currentUser: null, loggedInUsers: [] });
+      emitEvent({ type: 'logout' });
     },
+    
+    authenticateWithCallback: async (hiveResult, callback) => {
+      set({ isLoading: true, error: null });
+      
+      try {
+        // Call the dev's callback function
+        const serverResponse = await callback(hiveResult);
+        
+        // Create the complete user object
+        const user: LoggedInUser = {
+          username: hiveResult.username,
+          provider: hiveResult.provider,
+          challenge: hiveResult.challenge,
+          publicKey: hiveResult.publicKey,
+          proof: hiveResult.proof,
+          serverResponse
+        };
+        
+        // Add to store
+        get().addLoggedInUser(user);
+        get().setCurrentUser(user);
+        
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
+        set({ error: errorMessage });
+        throw error;
+      } finally {
+        set({ isLoading: false });
+      }
+    }
   };
 });
-
-// Export the event listener function
-export const addAuthEventListener = addEventListener;

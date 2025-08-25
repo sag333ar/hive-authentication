@@ -1,21 +1,43 @@
-# Hive Authentication API Reference
+# Hive Authentication Package API Reference
 
 ## Overview
 
-The Hive Authentication package provides a complete solution for authenticating users with the Hive blockchain. It includes a beautiful UI built with daisyUI and Tailwind CSS, secure state management with Zustand, and comprehensive authentication services.
+The Hive Authentication Package provides a flexible, callback-based authentication system for Hive blockchain applications. The package handles Hive blockchain authentication while allowing your app to handle server authentication through callbacks.
+
+## Core Concepts
+
+### Authentication Flow
+
+1. **Hive Authentication** (Package handles)
+   - User enters Hive username
+   - Package authenticates with Hive blockchain via Aioha
+   - Returns `HiveAuthResult` object
+
+2. **Server Authentication** (Your app handles)
+   - Package calls your callback function with Hive result
+   - Your app makes API call to your server
+   - Your app returns server response as JSON string
+   - Package stores encrypted data and triggers events
+
+3. **Data Storage** (Package handles)
+   - All user data encrypted with AES
+   - Stored in localStorage
+   - Never contains plain text data
 
 ## Components
 
-### AuthButton
+### `AuthButton`
 
-The main authentication button component that handles login/logout functionality.
+The main authentication button component.
 
-#### Props
+**Props**: None
 
-None - this is a self-contained component.
+**Behavior**:
+- Shows "Login" if no user is logged in
+- Shows user avatar if logged in
+- Opens login modal or switch user modal on click
 
-#### Usage
-
+**Example**:
 ```tsx
 import { AuthButton } from 'hive-authentication';
 
@@ -29,303 +51,420 @@ function App() {
 }
 ```
 
-#### Behavior
+### `LoginDialog`
 
-- **Not Logged In**: Shows "Login" button
-- **Logged In**: Shows user avatar and username
-- **Click Action**: 
-  - Not logged in: Opens login dialog
-  - Logged in: Logs out the user
+Modal dialog for user login.
 
-### LoginDialog
-
-A modal dialog for user authentication.
-
-#### Props
-
+**Props**:
 ```tsx
 interface LoginDialogProps {
-  isOpen: boolean;      // Controls dialog visibility
-  onClose: () => void;  // Callback when dialog closes
+  isOpen: boolean;
+  onClose: () => void;
+  showBackButton?: boolean;
+  onBack?: () => void;
 }
 ```
 
-#### Usage
-
+**Example**:
 ```tsx
 import { LoginDialog } from 'hive-authentication';
 
-function CustomLogin() {
+function MyLogin() {
   const [isOpen, setIsOpen] = useState(false);
-  
+
   return (
-    <>
-      <button onClick={() => setIsOpen(true)}>Custom Login</button>
-      <LoginDialog 
-        isOpen={isOpen} 
-        onClose={() => setIsOpen(false)} 
-      />
-    </>
+    <LoginDialog
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+      showBackButton={false}
+    />
   );
 }
 ```
 
-## Hooks
+### `SwitchUserModal`
 
-### useAuthStore
+Modal for managing multiple logged-in users.
 
-Zustand store hook for authentication state management.
-
-#### Returns
-
+**Props**:
 ```tsx
-{
+interface SwitchUserModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+```
+
+**Features**:
+- Lists all logged-in users with avatars
+- Shows current user with "Current" badge
+- Allows switching between users
+- Individual logout for each user
+- "Add Account" button to add new users
+- "Logout All" to clear all accounts
+
+**Example**:
+```tsx
+import { SwitchUserModal } from 'hive-authentication';
+
+function UserManagement() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <SwitchUserModal
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+    />
+  );
+}
+```
+
+## Store & Hooks
+
+### `useAuthStore()`
+
+Zustand store for authentication state management.
+
+**State**:
+```tsx
+interface AuthStore {
   currentUser: LoggedInUser | null;
   loggedInUsers: LoggedInUser[];
-  setCurrentUser: (user: LoggedInUser | null) => void;
-  addLoggedInUser: (user: LoggedInUser) => void;
-  removeLoggedInUser: (username: string) => void;
-  clearAllUsers: () => void;
+  isLoading: boolean;
+  error: string | null;
 }
 ```
 
-### addAuthEventListener
-
-Event listener for authentication state changes.
-
-#### Usage
-
+**Actions**:
 ```tsx
-import { addAuthEventListener } from 'hive-authentication';
+// Set current user
+setCurrentUser: (user: LoggedInUser | null) => void;
 
-const unsubscribe = addAuthEventListener((event) => {
-  // Handle auth events
-  console.log('Auth event:', event);
-});
+// Add user to logged-in users
+addLoggedInUser: (user: LoggedInUser) => void;
 
-// Cleanup when done
-unsubscribe();
+// Remove user
+removeLoggedInUser: (username: string) => void;
+
+// Clear all users
+clearAllUsers: () => void;
+
+// Set loading state
+setLoading: (loading: boolean) => void;
+
+// Set error state
+setError: (error: string | null) => void;
+
+// Authenticate with callback
+authenticateWithCallback: (
+  hiveResult: HiveAuthResult,
+  callback: (hiveResult: HiveAuthResult) => Promise<string>
+) => Promise<void>;
 ```
 
-#### Event Types
-
-- **`login`**: User logged in
-- **`logout`**: User logged out  
-- **`user_switch`**: User switched to different account
-- **`user_add`**: New user added
-- **`user_remove`**: User removed
-
-#### Event Object Structure
-
-```tsx
-interface AuthEvent {
-  type: AuthEventType;
-  user?: LoggedInUser;        // Current user (for login, user_switch, user_add)
-  previousUser?: LoggedInUser; // Previous user (for logout, user_switch)
-  username?: string;          // Username (for user_remove)
-}
-```
-
-#### Usage
-
+**Example**:
 ```tsx
 import { useAuthStore } from 'hive-authentication';
 
-function UserProfile() {
-  const { currentUser, setCurrentUser } = useAuthStore();
-  
-  const handleLogout = () => {
-    setCurrentUser(null);
+function MyComponent() {
+  const { 
+    currentUser, 
+    loggedInUsers, 
+    isLoading, 
+    authenticateWithCallback 
+  } = useAuthStore();
+
+  const handleLogin = async (username: string) => {
+    try {
+      await authenticateWithCallback(
+        hiveResult,
+        async (hiveResult) => {
+          // Your server authentication logic here
+          const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              challenge: hiveResult.challenge,
+              username: hiveResult.username,
+              pubkey: hiveResult.publicKey,
+              proof: hiveResult.proof,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Server authentication failed');
+          }
+
+          const data = await response.json();
+          return JSON.stringify(data);
+        }
+      );
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
   };
-  
-  if (!currentUser) {
-    return <div>Please log in</div>;
-  }
-  
+
   return (
     <div>
-      <h1>Welcome, {currentUser.username}!</h1>
-      <button onClick={handleLogout}>Logout</button>
+      {currentUser ? (
+        <p>Welcome, {currentUser.username}!</p>
+      ) : (
+        <p>Please log in</p>
+      )}
     </div>
   );
 }
 ```
 
+## Event System
+
+### `addAuthEventListener(listener)`
+
+Listen to authentication state changes.
+
+**Event Types**:
+- `login`: User logged in
+- `logout`: User logged out
+- `user_switch`: User switched
+- `user_add`: User added to list
+- `user_remove`: User removed from list
+
+**Event Object**:
+```tsx
+interface AuthEvent {
+  type: AuthEventType;
+  user?: LoggedInUser;
+  previousUser?: LoggedInUser;
+}
+```
+
+**Example**:
+```tsx
+import { addAuthEventListener } from 'hive-authentication';
+import { useEffect } from 'react';
+
+function MyApp() {
+  useEffect(() => {
+    const unsubscribe = addAuthEventListener((event) => {
+      switch (event.type) {
+        case 'login':
+          console.log('User logged in:', event.user);
+          // Update your app state, show welcome message, etc.
+          break;
+          
+        case 'logout':
+          console.log('User logged out:', event.previousUser);
+          // Clear app state, redirect to login, etc.
+          break;
+          
+        case 'user_switch':
+          console.log('User switched from', event.previousUser?.username, 'to', event.user?.username);
+          // Update UI, refresh user-specific data, etc.
+          break;
+          
+        case 'user_add':
+          console.log('New user added:', event.user?.username);
+          // Update user list, show notification, etc.
+          break;
+          
+        case 'user_remove':
+          console.log('User removed:', event.user?.username);
+          // Update user list, show notification, etc.
+          break;
+      }
+    });
+    
+    // Cleanup listener on unmount
+    return unsubscribe;
+  }, []);
+  
+  return <div>Your app content</div>;
+}
+```
+
 ## Services
 
-### AuthService
+### `AuthService`
 
-Static service class for authentication operations.
+Static service class for Hive blockchain authentication.
 
-#### Methods
+**Methods**:
+```tsx
+// Initialize Aioha
+static async initialize(): Promise<void>;
 
-##### `completeLogin(username: string): Promise<LoggedInUser>`
+// Login with Hive blockchain
+static async loginWithHive(username: string): Promise<HiveAuthResult>;
 
-Performs the complete authentication flow:
-1. Hive blockchain authentication
-2. Server authentication
-3. Returns complete user object
+// Complete login flow using callback
+static async completeLogin(
+  username: string,
+  callback: (hiveResult: HiveAuthResult) => Promise<string>
+): Promise<HiveAuthResult & { serverResponse: string }>;
+```
 
+**Example**:
 ```tsx
 import { AuthService } from 'hive-authentication';
 
-async function handleCustomLogin(username: string) {
+async function loginUser(username: string) {
   try {
-    const user = await AuthService.completeLogin(username);
-    console.log('Login successful:', user);
-    return user;
+    // Initialize Aioha
+    await AuthService.initialize();
+    
+    // Get Hive authentication result
+    const hiveResult = await AuthService.loginWithHive(username);
+    
+    console.log('Hive auth result:', hiveResult);
+    
+    // Now you can use this with authenticateWithCallback
+    // or handle server authentication yourself
+    
   } catch (error) {
-    console.error('Login failed:', error);
-    throw error;
+    console.error('Hive authentication failed:', error);
   }
 }
 ```
-
-##### `loginWithHive(username: string): Promise<HiveAuthResult>`
-
-Authenticates with Hive blockchain only.
-
-```tsx
-import { AuthService } from 'hive-authentication';
-
-async function hiveOnlyLogin(username: string) {
-  try {
-    const result = await AuthService.loginWithHive(username);
-    console.log('Hive auth result:', result);
-    return result;
-  } catch (error) {
-    console.error('Hive auth failed:', error);
-    throw error;
-  }
-}
-```
-
-##### `authenticateWithServer(challenge: string, username: string, pubkey: string, proof: string): Promise<ServerAuthResponse>`
-
-Authenticates with the server API.
-
-```tsx
-import { AuthService } from 'hive-authentication';
-
-async function serverAuth(challenge: string, username: string, pubkey: string, proof: string) {
-  try {
-    const response = await AuthService.authenticateWithServer(
-      challenge, username, pubkey, proof
-    );
-    console.log('Server auth response:', response);
-    return response;
-  } catch (error) {
-    console.error('Server auth failed:', error);
-    throw error;
-  }
-}
-```
-
-**Note**: The `challenge` field should contain the hash returned from Hive authentication, and the `proof` field should contain the timestamp used during Hive authentication.
 
 ## Types
 
-### LoggedInUser
-
-Complete user information after successful authentication.
-
-```tsx
-interface LoggedInUser {
-  username: string;      // Hive username
-  provider: string;      // Authentication provider (keychain, hiveauth, etc.)
-  challenge: string;     // Challenge message used for authentication
-  publicKey: string;     // User's public key
-  proof: string;         // Proof of authentication
-  token: string;         // JWT token from server
-  type: string;          // User type (admin, guide, owner, user)
-}
-```
-
-### HiveAuthResult
+### `HiveAuthResult`
 
 Result from Hive blockchain authentication.
 
 ```tsx
 interface HiveAuthResult {
-  provider: string;      // Authentication provider
-  result: any;           // Raw result from aioha
+  provider: string;      // Authentication provider (e.g., 'keychain')
+  challenge: string;     // Hash from Hive authentication
   publicKey: string;     // User's public key
   username: string;      // Hive username
+  proof: string;         // Timestamp used for authentication
 }
 ```
 
-### ServerAuthResponse
+### `LoggedInUser`
 
-Response from server authentication.
+Complete user data after authentication.
+
+```tsx
+interface LoggedInUser {
+  username: string;
+  provider: string;
+  challenge: string;
+  publicKey: string;
+  proof: string;
+  serverResponse: string; // JSON string from your server
+}
+```
+
+### `ServerAuthResponse`
+
+**Deprecated**: This type is no longer used in the callback-based system.
 
 ```tsx
 interface ServerAuthResponse {
-  token: string;         // JWT token
-  type: 'admin' | 'guide' | 'owner' | 'user';  // User type
+  token: string;
+  type: string;
 }
 ```
 
-### AuthStore
+## Advanced Usage
 
-Zustand store interface.
+### Custom Server Authentication
 
 ```tsx
-interface AuthStore {
-  currentUser: LoggedInUser | null;
-  loggedInUsers: LoggedInUser[];
-  setCurrentUser: (user: LoggedInUser | null) => void;
-  addLoggedInUser: (user: LoggedInUser) => void;
-  removeLoggedInUser: (username: string) => void;
-  clearAllUsers: () => void;
+import { useAuthStore } from 'hive-authentication';
+
+function MyApp() {
+  const { authenticateWithCallback } = useAuthStore();
+
+  const handleLogin = async (username: string) => {
+    try {
+      await authenticateWithCallback(
+        // Hive result will be provided by the package
+        hiveResult,
+        // Your callback function
+        async (hiveResult) => {
+          // Make your API call
+          const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              challenge: hiveResult.challenge,
+              username: hiveResult.username,
+              pubkey: hiveResult.publicKey,
+              proof: hiveResult.proof,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Server authentication failed');
+          }
+
+          const data = await response.json();
+          
+          // Return your server response as JSON string
+          return JSON.stringify(data);
+        }
+      );
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
+  };
+
+  return <AuthButton />;
 }
 ```
-
-## Configuration
 
 ### Environment Variables
 
-Set `VITE_LOCAL_KEY` for AES encryption of local storage data:
-
-```env
-VITE_LOCAL_KEY=your-secret-encryption-key
+```bash
+# Required: Encryption key for local storage
+VITE_LOCAL_KEY=your-secure-encryption-key
 ```
 
-### Tailwind CSS
+## Migration from v0.0.5
 
-The package uses Tailwind CSS with daisyUI. Make sure your project has Tailwind CSS configured.
+If you're upgrading from the previous version that had hardcoded server authentication:
 
-### DaisyUI
+1. **Remove hardcoded API calls**: The package no longer calls `https://beta-api.distriator.com/login`
+2. **Implement callback-based authentication**: Use `authenticateWithCallback` with your own server logic
+3. **Update event handling**: The event system remains the same
+4. **Update types**: `LoggedInUser` now has `serverResponse` instead of `token` and `type`
 
-The package includes daisyUI components. No additional configuration needed.
+### Before (v0.0.5):
+```tsx
+// Old way - package handled server authentication
+const user = await AuthService.completeLogin(username);
+```
+
+### After (v0.0.6+):
+```tsx
+// New way - your app handles server authentication
+await authenticateWithCallback(
+  hiveResult,
+  async (hiveResult) => {
+    // Your server authentication logic
+    const response = await fetch('/api/login', { /* ... */ });
+    const data = await response.json();
+    return JSON.stringify(data);
+  }
+);
+```
 
 ## Error Handling
 
-All authentication methods throw errors that can be caught and handled:
+The package provides comprehensive error handling:
 
-```tsx
-try {
-  const user = await AuthService.completeLogin(username);
-  // Handle success
-} catch (error) {
-  if (error instanceof Error) {
-    console.error('Authentication failed:', error.message);
-    // Handle specific error
-  } else {
-    console.error('Unknown error occurred');
-    // Handle unknown error
-  }
-}
-```
+- **Hive Authentication Errors**: Thrown when blockchain authentication fails
+- **Callback Errors**: Thrown when your callback function fails
+- **Storage Errors**: Handled gracefully with fallbacks
+- **Network Errors**: Your app handles these in the callback
 
-## Security Features
+## Best Practices
 
-- **AES Encryption**: All local storage data is encrypted
-- **Secure Storage**: Uses encrypted localStorage for persistence
-- **Token Management**: JWT tokens are securely stored
-- **Provider Validation**: Validates authentication providers
-
-## Browser Support
-
-- Modern browsers with ES6+ support
-- LocalStorage support required
-- CryptoJS compatibility
+1. **Always handle errors**: Wrap authentication calls in try-catch blocks
+2. **Clean up listeners**: Unsubscribe from event listeners on component unmount
+3. **Secure encryption key**: Use a strong `VITE_LOCAL_KEY` in production
+4. **Validate server responses**: Ensure your callback returns valid JSON strings
+5. **Handle loading states**: Use the `isLoading` state from the store
+6. **Test with multiple users**: Verify the multi-user functionality works correctly

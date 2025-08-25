@@ -1,102 +1,67 @@
-import { initAioha, KeyTypes, Providers } from '@aioha/aioha';
-import type { HiveAuthResult, ServerAuthResponse, LoggedInUser } from '../types/auth';
-
-const aioha = initAioha();
+import { initAioha, Providers } from '@aioha/aioha';
+import type { HiveAuthResult } from '../types/auth';
 
 export class AuthService {
-  static async loginWithHive(username: string): Promise<HiveAuthResult> {
-    const timestamp = new Date().toISOString(); // Current timestamp as proof
-    
-    try {
-      const result = await aioha.login(Providers.Keychain, username, {
-        msg: timestamp,
-        keyType: KeyTypes.Posting,
-        loginTitle: 'Login with Hive',
-      });
+  private static aioha: any = null;
 
+  static async initialize(): Promise<void> {
+    if (!this.aioha) {
+      this.aioha = await initAioha();
+    }
+  }
+
+  static async loginWithHive(username: string): Promise<HiveAuthResult> {
+    if (!this.aioha) {
+      throw new Error('Aioha not initialized. Call initialize() first.');
+    }
+
+    try {
+      // Create timestamp for proof
+      const timestamp = new Date().toISOString();
+      
+      // Login with Hive blockchain
+      const result = await this.aioha.login(Providers.Keychain, username, { msg: timestamp });
+      
       if (!result.success) {
-        console.error('Hive login failed:', result.error);
-        throw new Error(result.error);
+        throw new Error(result.error || 'Hive authentication failed');
       }
 
       return {
         provider: 'keychain',
-        challenge: result.result || '',  // This should be the hash from Hive auth
-        publicKey: result.publicKey || '',
-        username: result.username || username,
-        proof: timestamp,  // This is the timestamp we sent
+        challenge: result.hash, // Hash from Hive authentication
+        publicKey: result.publicKey,
+        username: username,
+        proof: timestamp // Original timestamp as proof
       };
     } catch (error) {
-      console.error('Hive login failed:', error);
-      throw new Error('Hive authentication failed');
+      console.error('Hive authentication error:', error);
+      throw new Error('Failed to authenticate with Hive blockchain');
     }
   }
 
-  static async authenticateWithServer(
-    challenge: string,
+  // Note: Server authentication is now handled by the dev's callback
+  // This method is kept for backward compatibility but deprecated
+  static async authenticateWithServer(): Promise<any> {
+    console.warn('authenticateWithServer is deprecated. Use the callback-based approach instead.');
+    throw new Error('Server authentication should be handled by your app\'s callback function');
+  }
+
+  // Complete login flow using callback
+  static async completeLogin(
     username: string,
-    pubkey: string,
-    proof: string
-  ): Promise<ServerAuthResponse> {
-    try {
-      const response = await fetch('https://beta-api.distriator.com/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Referer': 'https://distriator.com/',
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
-        },
-        body: JSON.stringify({
-          challenge,
-          username,
-          pubkey,
-          proof,
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Server authentication failed: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      return {
-        token: data.token,
-        type: data.type,
-      };
-    } catch (error) {
-      console.error('Server authentication failed:', error);
-      throw new Error('Server authentication failed');
-    }
-  }
-
-  static async completeLogin(username: string): Promise<LoggedInUser> {
-    try {
-      // Step 1: Login with Hive
-      const hiveResult = await this.loginWithHive(username);
-
-      // Step 2: Authenticate with server
-      const serverResult = await this.authenticateWithServer(
-        hiveResult.challenge,  // The hash from Hive auth
-        hiveResult.username,
-        hiveResult.publicKey,
-        hiveResult.proof,      // The timestamp
-      );
-
-      // Step 3: Create complete user object
-      const user: LoggedInUser = {
-        username,
-        provider: hiveResult.provider,
-        challenge: hiveResult.challenge,
-        publicKey: hiveResult.publicKey,
-        proof: hiveResult.proof,
-        token: serverResult.token,
-        type: serverResult.type,
-      };
-
-      return user;
-    } catch (error) {
-      console.error('Complete login failed:', error);
-      throw error;
-    }
+    callback: (hiveResult: HiveAuthResult) => Promise<string>
+  ): Promise<HiveAuthResult & { serverResponse: string }> {
+    // Get Hive authentication result
+    const hiveResult = await this.loginWithHive(username);
+    
+    // Call the dev's callback for server authentication
+    const serverResponse = await callback(hiveResult);
+    
+    // Return the complete result for the store to handle
+    return {
+      ...hiveResult,
+      serverResponse
+    };
   }
 }
+

@@ -85,7 +85,7 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({ isOpen, onClos
               {/* Username */}
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{user.username}</p>
-                <p className="text-sm text-gray-500 capitalize">{user.type}</p>
+                <p className="text-sm text-gray-500 capitalize">User</p>
               </div>
               
               {/* Status/Action */}
