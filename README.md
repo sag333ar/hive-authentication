@@ -1,16 +1,6 @@
-# Hive Authentication Package
+# Hive Authentication
 
-A React.js package for Hive blockchain authentication with a flexible callback-based server authentication system.
-
-## Features
-
-- 🔐 **Hive Blockchain Authentication**: Login with HiveKeychain, HiveAuth, or Private Posting Key
-- 🎯 **Flexible Server Integration**: Your app handles server authentication via callbacks
-- 👥 **Multi-User Support**: Switch between multiple logged-in accounts
-- 🔒 **Secure Storage**: All data encrypted with AES encryption
-- 📱 **Responsive Design**: Mobile-first design with DaisyUI components
-- 🎨 **Theme Independent**: Works with any project's theme
-- 📡 **Event System**: Listen to authentication state changes
+A React package for Hive blockchain authentication with a simple callback-based API.
 
 ## Installation
 
@@ -26,7 +16,7 @@ npm install hive-authentication
 import 'hive-authentication/build.css';
 ```
 
-### 2. Use the Auth Button
+### 2. Use the Auth Button with Callback
 
 ```tsx
 import { AuthButton, useAuthStore, addAuthEventListener } from 'hive-authentication';
@@ -51,10 +41,34 @@ function App() {
     return unsubscribe;
   }, []);
 
+  // Your authentication callback
+  const handleAuthenticate = async (hiveResult) => {
+    // Make your API call here
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        challenge: hiveResult.challenge,
+        username: hiveResult.username,
+        pubkey: hiveResult.publicKey,
+        proof: hiveResult.proof,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Server authentication failed');
+    }
+
+    const data = await response.json();
+    
+    // Return your server response as JSON string
+    return JSON.stringify(data);
+  };
+
   return (
     <div>
       <h1>My App</h1>
-      <AuthButton />
+      <AuthButton onAuthenticate={handleAuthenticate} />
     </div>
   );
 }
@@ -62,100 +76,29 @@ function App() {
 
 ## How It Works
 
-### 1. **Hive Authentication** (Package handles)
-- User enters Hive username
-- Package authenticates with Hive blockchain via Aioha
-- Returns Hive authentication result
-
-### 2. **Server Authentication** (Your app handles)
-- Package calls your callback function with Hive result
-- Your app makes API call to your server
-- Your app returns server response as JSON string
-- Package stores encrypted data and triggers events
-
-### 3. **Data Storage** (Package handles)
-- All user data encrypted with AES
-- Stored in localStorage
-- Never contains plain text data
+1. **User clicks login** → Package shows login modal
+2. **User enters username** → Package authenticates with Hive blockchain
+3. **Package calls your callback** → Your app makes API call to your server
+4. **Your app returns result** → Package stores the data and triggers events
+5. **If callback fails** → Package automatically logs out the user
 
 ## API Reference
 
 ### Components
 
 #### `AuthButton`
-The main authentication button component.
+The main authentication button.
 
-**Props**: None
-
-**Behavior**:
-- Shows "Login" if no user is logged in
-- Shows user avatar if logged in
-- Opens login modal or switch user modal on click
-
-#### `LoginDialog`
-Modal dialog for user login.
-
-**Props**:
+**Props:**
 ```tsx
-interface LoginDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  showBackButton?: boolean;
-  onBack?: () => void;
+interface AuthButtonProps {
+  onAuthenticate?: (hiveResult: HiveAuthResult) => Promise<string>;
 }
 ```
 
-#### `SwitchUserModal`
-Modal for managing multiple logged-in users.
-
-**Props**:
+**Usage:**
 ```tsx
-interface SwitchUserModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-```
-
-### Store
-
-#### `useAuthStore()`
-Zustand store for authentication state.
-
-**State**:
-```tsx
-interface AuthStore {
-  currentUser: LoggedInUser | null;
-  loggedInUsers: LoggedInUser[];
-  isLoading: boolean;
-  error: string | null;
-}
-```
-
-**Actions**:
-```tsx
-// Set current user
-setCurrentUser: (user: LoggedInUser | null) => void;
-
-// Add user to logged-in users
-addLoggedInUser: (user: LoggedInUser) => void;
-
-// Remove user
-removeLoggedInUser: (username: string) => void;
-
-// Clear all users
-clearAllUsers: () => void;
-
-// Set loading state
-setLoading: (loading: boolean) => void;
-
-// Set error state
-setError: (error: string | null) => void;
-
-// Authenticate with callback
-authenticateWithCallback: (
-  hiveResult: HiveAuthResult,
-  callback: (hiveResult: HiveAuthResult) => Promise<string>
-) => Promise<void>;
+<AuthButton onAuthenticate={handleAuthenticate} />
 ```
 
 ### Events
@@ -163,117 +106,60 @@ authenticateWithCallback: (
 #### `addAuthEventListener(listener)`
 Listen to authentication state changes.
 
-**Event Types**:
-- `login`: User logged in
-- `logout`: User logged out
-- `user_switch`: User switched
-- `user_add`: User added to list
-- `user_remove`: User removed from list
+**Event Types:**
+- `login` - User logged in
+- `logout` - User logged out  
+- `user_switch` - User switched
+- `user_add` - User added to list
+- `user_remove` - User removed from list
 
-**Event Object**:
+**Usage:**
 ```tsx
-interface AuthEvent {
-  type: AuthEventType;
-  user?: LoggedInUser;
-  previousUser?: LoggedInUser;
-}
+const unsubscribe = addAuthEventListener((event) => {
+  console.log('Auth event:', event.type, event.user);
+});
+
+// Clean up
+unsubscribe();
 ```
 
-### Types
+### Store
 
-#### `HiveAuthResult`
-Result from Hive blockchain authentication.
+#### `useAuthStore()`
+Access authentication state and actions.
+
+**State:**
+```tsx
+const { currentUser, loggedInUsers, isLoading, error } = useAuthStore();
+```
+
+**Actions:**
+```tsx
+const { setCurrentUser, removeLoggedInUser, clearAllUsers } = useAuthStore();
+```
+
+## Types
 
 ```tsx
 interface HiveAuthResult {
-  provider: string;      // Authentication provider (e.g., 'keychain')
-  challenge: string;     // Hash from Hive authentication
+  provider: string;      // 'keychain'
+  challenge: string;     // Hive signature
   publicKey: string;     // User's public key
   username: string;      // Hive username
-  proof: string;         // Timestamp used for authentication
+  proof: string;         // Timestamp
+}
+
+interface LoggedInUser extends HiveAuthResult {
+  serverResponse: string; // Your server response
 }
 ```
 
-#### `LoggedInUser`
-Complete user data after authentication.
-
-```tsx
-interface LoggedInUser {
-  username: string;
-  provider: string;
-  challenge: string;
-  publicKey: string;
-  proof: string;
-  serverResponse: string; // JSON string from your server
-}
-```
-
-## Advanced Usage
-
-### Custom Server Authentication
-
-```tsx
-import { useAuthStore } from 'hive-authentication';
-
-function MyApp() {
-  const { authenticateWithCallback } = useAuthStore();
-
-  const handleLogin = async (username: string) => {
-    try {
-      await authenticateWithCallback(
-        // Hive result will be provided by the package
-        hiveResult,
-        // Your callback function
-        async (hiveResult) => {
-          // Make your API call
-          const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              challenge: hiveResult.challenge,
-              username: hiveResult.username,
-              pubkey: hiveResult.publicKey,
-              proof: hiveResult.proof,
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error('Server authentication failed');
-          }
-
-          const data = await response.json();
-          
-          // Return your server response as JSON string
-          return JSON.stringify(data);
-        }
-      );
-    } catch (error) {
-      console.error('Login failed:', error);
-    }
-  };
-
-  return <AuthButton />;
-}
-```
-
-### Environment Variables
+## Environment Variables
 
 ```bash
 # Required: Encryption key for local storage
 VITE_LOCAL_KEY=your-secure-encryption-key
 ```
-
-## Examples
-
-See the [examples](./examples/) folder for complete usage examples.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
 
 ## License
 

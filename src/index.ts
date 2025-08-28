@@ -19,5 +19,6 @@ export type {
   AuthEventType,
   AuthEvent,
   AuthEventListener,
-  LoginDialogProps
+  LoginDialogProps,
+  SwitchUserModalProps
 } from './types/auth';

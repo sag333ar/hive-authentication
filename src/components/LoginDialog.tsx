@@ -7,7 +7,8 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
   isOpen, 
   onClose, 
   showBackButton = false, 
-  onBack 
+  onBack,
+  onAuthenticate
 }) => {
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -35,29 +36,15 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
       // First get the Hive authentication result
       const hiveResult = await AuthService.loginWithHive(username.trim());
       
+      // Check if callback is provided
+      if (!onAuthenticate) {
+        throw new Error('No authentication callback provided. Please supply onAuthenticate prop to AuthButton.');
+      }
+      
       // Use the callback-based authentication
       await authenticateWithCallback(
         hiveResult,
-        // This callback will be provided by the dev's app
-        // For now, we'll use a placeholder that simulates the old behavior
-        async (hiveResult) => {
-          // This is where the dev's app would make their API call
-          // For demonstration, we'll return a mock response
-          console.log('Hive authentication result:', hiveResult);
-          console.log('Your app should now call your API with these details:');
-          console.log('- challenge:', hiveResult.challenge);
-          console.log('- username:', hiveResult.username);
-          console.log('- pubkey:', hiveResult.publicKey);
-          console.log('- proof:', hiveResult.proof);
-          
-          // Return a mock JSON string response
-          // In real usage, this would be the response from your server
-          return JSON.stringify({
-            token: 'mock-jwt-token',
-            type: 'user',
-            message: 'This is a mock response. Replace with your actual server response.'
-          });
-        }
+        onAuthenticate
       );
       
       onClose();

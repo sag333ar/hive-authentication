@@ -2,8 +2,13 @@ import React, { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { LoginDialog } from './LoginDialog';
 import { SwitchUserModal } from './SwitchUserModal';
+import type { HiveAuthResult } from '../types/auth';
 
-export const AuthButton: React.FC = () => {
+interface AuthButtonProps {
+  onAuthenticate?: (hiveResult: HiveAuthResult) => Promise<string>;
+}
+
+export const AuthButton: React.FC<AuthButtonProps> = ({ onAuthenticate }) => {
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const [isSwitchUserModalOpen, setIsSwitchUserModalOpen] = useState(false);
   const { currentUser } = useAuthStore();
@@ -52,6 +57,7 @@ export const AuthButton: React.FC = () => {
       <LoginDialog
         isOpen={isLoginDialogOpen}
         onClose={() => setIsLoginDialogOpen(false)}
+        onAuthenticate={onAuthenticate}
       />
       
       <SwitchUserModal

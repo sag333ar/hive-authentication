@@ -52,9 +52,16 @@ export interface AuthEvent {
 
 export type AuthEventListener = (event: AuthEvent) => void;
 
+export interface SwitchUserModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onAuthenticate?: (hiveResult: HiveAuthResult) => Promise<string>;
+}
+
 export interface LoginDialogProps {
   isOpen: boolean;
   onClose: () => void;
   showBackButton?: boolean;
   onBack?: () => void;
+  onAuthenticate?: (hiveResult: HiveAuthResult) => Promise<string>;
 }
