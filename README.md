@@ -105,7 +105,12 @@ hivesigner={{
 
 **Note**: Both configurations are required even if you only plan to use one provider. This ensures the Aioha library is properly initialized with all necessary settings.
 
-**HiveAuth Support**: The package now supports HiveAuth configuration and will automatically initialize the Aioha library with your settings. HiveAuth login functionality is planned for future releases.
+**HiveAuth Support**: The package now fully supports HiveAuth login! When using HiveAuth:
+
+1. **Event Listening**: The package automatically listens for `hiveauth_login_request` events from the Aioha library
+2. **QR Code Display**: When a HiveAuth login request is received, a QR code is displayed for the user to scan
+3. **Wallet Integration**: Users can scan the QR code with their HiveAuth wallet app to approve the login
+4. **Automatic Handling**: The package handles the entire flow from login request to authentication completion
 
 ## How It Works
 
@@ -120,6 +125,19 @@ hivesigner={{
 - **Adding accounts** (when user clicks "Add Account" in the switch user modal)
 
 This ensures consistent authentication flow for all user operations.
+
+## HiveAuth Login Flow
+
+When a user chooses HiveAuth login:
+
+1. **Login Request**: User clicks "Login with HiveAuth" button
+2. **Event Emission**: Aioha library emits a `hiveauth_login_request` event
+3. **QR Code Display**: Package automatically displays a QR code with the login payload
+4. **Wallet Scan**: User scans QR code with their HiveAuth wallet app
+5. **Wallet Approval**: User approves the login in their wallet
+6. **Authentication Complete**: Package receives the authentication result and proceeds with your callback
+
+The QR code is automatically generated and displayed, so you don't need to implement any additional UI for HiveAuth support.
 
 ## State Management
 

@@ -39,7 +39,8 @@ export interface AuthStore {
   authenticateWithCallback: (
     hiveResult: HiveAuthResult,
     callback: (hiveResult: HiveAuthResult) => Promise<string>,
-    config?: AiohaConfig
+    config?: AiohaConfig,
+    onHiveAuthRequest?: (event: HiveAuthEvent) => void
   ) => Promise<void>;
 }
 
@@ -73,6 +74,8 @@ export interface AuthButtonProps {
     callbackURL: string;
     scope: string[];
   };
+  // HiveAuth event callback (optional)
+  onHiveAuthRequest?: (event: HiveAuthEvent) => void;
 }
 
 export interface AiohaConfig {
@@ -86,4 +89,10 @@ export interface AiohaConfig {
     callbackURL: string;
     scope: string[];
   };
+}
+
+export interface HiveAuthEvent {
+  type: 'hiveauth_login_request';
+  payload: string; // QR code data
+  username: string;
 }

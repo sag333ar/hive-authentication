@@ -293,13 +293,11 @@ Static service class for Hive blockchain authentication.
 static async initialize(): Promise<void>;
 
 // Login with Hive blockchain
-static async loginWithHive(username: string): Promise<HiveAuthResult>;
+static async loginWithHiveKeychain(username: string): Promise<HiveAuthResult>;
 
-// Complete login flow using callback
-static async completeLogin(
-  username: string,
-  callback: (hiveResult: HiveAuthResult) => Promise<string>
-): Promise<HiveAuthResult & { serverResponse: string }>;
+// Login with Hive blockchain
+static async loginWithHiveAuth(username: string): Promise<HiveAuthResult>;
+
 ```
 
 **Example**:
@@ -312,7 +310,7 @@ async function loginUser(username: string) {
     await AuthService.initialize();
     
     // Get Hive authentication result
-    const hiveResult = await AuthService.loginWithHive(username);
+    const hiveResult = await AuthService.loginWithHiveKeychain(username);
     
     console.log('Hive auth result:', hiveResult);
     
@@ -420,35 +418,6 @@ function MyApp() {
 ```bash
 # Required: Encryption key for local storage
 VITE_LOCAL_KEY=your-secure-encryption-key
-```
-
-## Migration from v0.0.5
-
-If you're upgrading from the previous version that had hardcoded server authentication:
-
-1. **Remove hardcoded API calls**: The package no longer calls `https://beta-api.distriator.com/login`
-2. **Implement callback-based authentication**: Use `authenticateWithCallback` with your own server logic
-3. **Update event handling**: The event system remains the same
-4. **Update types**: `LoggedInUser` now has `serverResponse` instead of `token` and `type`
-
-### Before (v0.0.5):
-```tsx
-// Old way - package handled server authentication
-const user = await AuthService.completeLogin(username);
-```
-
-### After (v0.0.6+):
-```tsx
-// New way - your app handles server authentication
-await authenticateWithCallback(
-  hiveResult,
-  async (hiveResult) => {
-    // Your server authentication logic
-    const response = await fetch('/api/login', { /* ... */ });
-    const data = await response.json();
-    return JSON.stringify(data);
-  }
-);
 ```
 
 ## Error Handling

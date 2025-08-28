@@ -7,7 +7,7 @@ import type { AuthButtonProps } from '../types/auth';
 export const AuthButton: React.FC<AuthButtonProps> = ({ 
   onAuthenticate, 
   hiveauth, 
-  hivesigner 
+  hivesigner
 }) => {
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const [isSwitchUserModalOpen, setIsSwitchUserModalOpen] = useState(false);

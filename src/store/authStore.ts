@@ -130,13 +130,15 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       set({ currentUser: null, loggedInUsers: [] });
     },
     
-    authenticateWithCallback: async (hiveResult, callback, config) => {
+    authenticateWithCallback: async (hiveResult, callback, config, onHiveAuthRequest) => {
       set({ isLoading: true, error: null });
       
       try {
-        // Initialize AuthService with configuration if provided
+        // Initialize AuthService with configuration and HiveAuth callback
         if (config) {
-          await AuthService.initialize(config);
+          await AuthService.initialize(config, onHiveAuthRequest);
+        } else {
+          throw new Error('Configuration is required for authentication');
         }
         
         // Call the dev's callback function

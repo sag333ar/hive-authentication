@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { AuthService } from '../services/authService';
-import type { LoginDialogProps } from '../types/auth';
+import type { LoginDialogProps, HiveAuthEvent } from '../types/auth';
 
-export const LoginDialog: React.FC<LoginDialogProps> = ({ 
-  isOpen, 
-  onClose, 
-  showBackButton = false, 
+export const LoginDialog: React.FC<LoginDialogProps> = ({
+  isOpen,
+  onClose,
+  showBackButton = false,
   onBack,
-  onAuthenticate
+  onAuthenticate,
+  config
 }) => {
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+  const [hiveAuthPayload, setHiveAuthPayload] = useState<string | null>(null);
+  const [showQRCode, setShowQRCode] = useState(false);
+
   const { isLoading, authenticateWithCallback } = useAuthStore();
 
   useEffect(() => {
@@ -24,29 +27,45 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
     }
   }, [username]);
 
-  const handleLogin = async () => {
+  const handleLogin = async (keychain: boolean = true) => {
     if (!username.trim()) return;
-    
+
     setError(null);
-    
+    setHiveAuthPayload(null);
+    setShowQRCode(false);
+
     try {
-      // Initialize Aioha if needed
-      await AuthService.initialize();
-      
+      // Check if HiveAuth is selected but not configured
+      if (!keychain && !config?.hiveauth) {
+        throw new Error('HiveAuth not configured. Please provide hiveauth configuration.');
+      }
+
+      // Initialize Aioha with configuration
+      if (config) {
+        await AuthService.initialize(config);
+      } else {
+        throw new Error('Configuration is required for authentication');
+      }
+
       // Get the Hive authentication result
-      const hiveResult = await AuthService.loginWithHive(username.trim());
-      
+      const hiveResult = keychain ? await AuthService.loginWithHiveKeychain(username.trim()) : await AuthService.loginWithHiveAuth(username.trim());
+
       // Check if callback is provided
       if (!onAuthenticate) {
         throw new Error('No authentication callback provided. Please supply onAuthenticate prop to AuthButton.');
       }
-      
+
       // Use the callback-based authentication
       await authenticateWithCallback(
         hiveResult,
-        onAuthenticate
+        onAuthenticate,
+        config,
+        config?.hiveauth ? (event: HiveAuthEvent) => {
+          setHiveAuthPayload(event.payload);
+          setShowQRCode(true);
+        } : undefined
       );
-      
+
       onClose();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
@@ -56,12 +75,12 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && username.trim() && !isLoading) {
-      handleLogin();
+      handleLogin(true);
     }
   };
 
   if (!isOpen) return null;
-  
+
   return (
     <div className="modal modal-open">
       <div className="modal-box relative max-w-md mx-auto">
@@ -74,11 +93,11 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
               ←
             </button>
           )}
-          
+
           <h3 className="font-bold text-lg flex-1 text-center">
             {showBackButton ? 'Add Account' : 'Login with Hive'}
           </h3>
-          
+
           <button
             className="btn btn-sm btn-circle btn-ghost bg-base-200 hover:bg-base-300 border border-base-300"
             onClick={onClose}
@@ -86,18 +105,18 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
             ✕
           </button>
         </div>
-        
+
         <div className="form-control w-full">
           <label className="label">
             <span className="label-text">Hive Username</span>
           </label>
-          
+
           <div className="flex items-center gap-3">
             {avatarUrl && (
               <div className="avatar">
                 <div className="w-12 h-12 rounded-full">
-                  <img 
-                    src={avatarUrl} 
+                  <img
+                    src={avatarUrl}
                     alt={`${username} avatar`}
                     onError={(e) => {
                       // Fallback to default avatar if image fails to load
@@ -107,7 +126,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
                 </div>
               </div>
             )}
-            
+
             <input
               type="text"
               placeholder="Enter username"
@@ -119,16 +138,16 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
             />
           </div>
         </div>
-        
+
         <div className="mt-4">
           <p className="text-sm text-gray-600 mb-3">
             Choose your login method:
           </p>
-          
+
           <div className="space-y-2">
             <button
               className="btn btn-primary w-full"
-              onClick={handleLogin}
+              onClick={() => handleLogin(true)}
               disabled={isLoading || !username.trim()}
             >
               {isLoading ? (
@@ -140,17 +159,50 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
                 'Login with HiveKeychain'
               )}
             </button>
-            
-            <button className="btn btn-outline w-full" disabled>
-              HiveAuth (Coming Soon)
+
+            <button
+              className="btn btn-outline w-full"
+              onClick={() => handleLogin(false)}
+              disabled={isLoading || !username.trim() || !config?.hiveauth}
+            >
+              {isLoading ? (
+                <>
+                  <span className="loading loading-spinner loading-sm"></span>
+                  Logging in...
+                </>
+              ) : (
+                'Login with HiveAuth'
+              )}
             </button>
-            
+
             <button className="btn btn-outline w-full" disabled>
               Private Posting Key (Coming Soon)
             </button>
           </div>
         </div>
-        
+
+        {/* HiveAuth QR Code Display */}
+        {showQRCode && hiveAuthPayload && (
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h4 className="font-semibold text-blue-800 mb-3">HiveAuth Login Request</h4>
+            <p className="text-sm text-blue-700 mb-3">
+              Scan this QR code with your HiveAuth wallet app to approve the login for <strong>{username}</strong>:
+            </p>
+            <div className="flex justify-center">
+              {/* TODO: Generate actual QR code from hiveAuthPayload */}
+              <div className="bg-white p-4 rounded border">
+                <div className="text-xs font-mono break-all max-w-xs">
+                  {hiveAuthPayload}
+                </div>
+                <p className="text-xs text-gray-500 mt-2 text-center">QR Code Placeholder</p>
+              </div>
+            </div>
+            <p className="text-xs text-blue-600 mt-3 text-center">
+              Waiting for wallet approval...
+            </p>
+          </div>
+        )}
+
         {error && (
           <div className="alert alert-error mt-4">
             <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
@@ -160,7 +212,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Backdrop */}
       <div className="modal-backdrop" onClick={onClose}></div>
     </div>
