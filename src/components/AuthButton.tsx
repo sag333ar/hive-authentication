@@ -5,7 +5,7 @@ import { SwitchUserModal } from './SwitchUserModal';
 import type { HiveAuthResult } from '../types/auth';
 
 interface AuthButtonProps {
-  onAuthenticate?: (hiveResult: HiveAuthResult) => Promise<string>;
+  onAuthenticate: (hiveResult: HiveAuthResult) => Promise<string>;
 }
 
 export const AuthButton: React.FC<AuthButtonProps> = ({ onAuthenticate }) => {
@@ -63,6 +63,7 @@ export const AuthButton: React.FC<AuthButtonProps> = ({ onAuthenticate }) => {
       <SwitchUserModal
         isOpen={isSwitchUserModalOpen}
         onClose={() => setIsSwitchUserModalOpen(false)}
+        onAuthenticate={onAuthenticate}
       />
     </>
   );

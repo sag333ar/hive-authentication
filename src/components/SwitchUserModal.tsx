@@ -6,7 +6,7 @@ import type { LoggedInUser, HiveAuthResult } from '../types/auth';
 interface SwitchUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAuthenticate?: (hiveResult: HiveAuthResult) => Promise<string>;
+  onAuthenticate: (hiveResult: HiveAuthResult) => Promise<string>;
 }
 
 export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({ isOpen, onClose, onAuthenticate }) => {

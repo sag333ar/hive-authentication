@@ -1,24 +1,7 @@
 import { create } from 'zustand';
 import CryptoJS from 'crypto-js';
-import type { AuthStore, LoggedInUser, AuthEvent, AuthEventListener } from '../types/auth';
+import type { AuthStore, LoggedInUser } from '../types/auth';
 import { AuthService } from '../services/authService';
-
-// Event system
-const listeners: AuthEventListener[] = [];
-
-const emitEvent = (event: AuthEvent) => {
-  listeners.forEach(listener => listener(event));
-};
-
-export const addAuthEventListener = (listener: AuthEventListener) => {
-  listeners.push(listener);
-  return () => {
-    const index = listeners.indexOf(listener);
-    if (index > -1) {
-      listeners.splice(index, 1);
-    }
-  };
-};
 
 // Encryption/Decryption helpers
 const encryptData = (data: unknown): string => {
@@ -88,8 +71,6 @@ export const useAuthStore = create<AuthStore>((set, get) => {
     setError: (error) => set({ error }),
     
     setCurrentUser: (user) => {
-      const previousUser = get().currentUser;
-      
       // Encrypt and store
       if (user) {
         const encryptedUser = encryptData(user);
@@ -99,15 +80,6 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       }
       
       set({ currentUser: user });
-      
-      // Emit events
-      if (previousUser && !user) {
-        emitEvent({ type: 'logout', previousUser });
-      } else if (!previousUser && user) {
-        emitEvent({ type: 'login', user });
-      } else if (previousUser && user && previousUser.username !== user.username) {
-        emitEvent({ type: 'user_switch', user, previousUser });
-      }
     },
     
     addLoggedInUser: (user) => {
@@ -119,12 +91,10 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       localStorage.setItem('logged-in-users', encryptedUsers);
       
       set({ loggedInUsers: updatedUsers });
-      emitEvent({ type: 'user_add', user });
     },
     
     removeLoggedInUser: async (username) => {
       const { loggedInUsers, currentUser } = get();
-      const userToRemove = loggedInUsers.find(u => u.username === username);
       const updatedUsers = loggedInUsers.filter(u => u.username !== username);
       
       // Remove user from Aioha provider
@@ -142,13 +112,8 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       if (currentUser?.username === username) {
         localStorage.removeItem('logged-in-user');
         set({ currentUser: null, loggedInUsers: updatedUsers });
-        emitEvent({ type: 'logout', previousUser: currentUser });
       } else {
         set({ loggedInUsers: updatedUsers });
-      }
-      
-      if (userToRemove) {
-        emitEvent({ type: 'user_remove', user: userToRemove });
       }
     },
     
@@ -163,7 +128,6 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       localStorage.removeItem('logged-in-users');
       localStorage.removeItem('logged-in-user');
       set({ currentUser: null, loggedInUsers: [] });
-      emitEvent({ type: 'logout' });
     },
     
     authenticateWithCallback: async (hiveResult, callback) => {

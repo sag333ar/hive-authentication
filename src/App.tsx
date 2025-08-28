@@ -1,36 +1,34 @@
 import { useEffect } from 'react';
 import { AuthButton } from './components/AuthButton';
-import { useAuthStore, addAuthEventListener } from './store/authStore';
-import type { AuthEvent, HiveAuthResult, LoggedInUser } from './types/auth';
+import { useAuthStore } from './store/authStore';
+import type { HiveAuthResult, LoggedInUser } from './types/auth';
 import './App.css';
 
 function App() {
   const { currentUser, loggedInUsers } = useAuthStore();
 
-  // Listen to authentication events
+  // Example of how to subscribe to store changes using Zustand
   useEffect(() => {
-    const unsubscribe = addAuthEventListener((event: AuthEvent) => {
-      switch (event.type) {
-        case 'login':
-          console.log('User logged in:', event.user);
-          break;
-        case 'logout':
-          console.log('User logged out:', event.previousUser);
-          break;
-        case 'user_switch':
-          console.log('User switched to:', event.user);
-          break;
-        case 'user_add':
-          console.log('User added:', event.user);
-          break;
-        case 'user_remove':
-          console.log('User removed:', event.user);
-          break;
+    let previousUser = currentUser;
+    
+    // Subscribe to store changes
+    const unsubscribe = useAuthStore.subscribe((state) => {
+      const currentUser = state.currentUser;
+      
+      // Detect login/logout/user switch
+      if (currentUser && !previousUser) {
+        console.log('User logged in:', currentUser);
+      } else if (!currentUser && previousUser) {
+        console.log('User logged out:', previousUser);
+      } else if (currentUser && previousUser && currentUser.username !== previousUser.username) {
+        console.log('User switched to:', currentUser);
       }
+      
+      previousUser = currentUser;
     });
 
     return unsubscribe;
-  }, []);
+  }, [currentUser]);
 
   // Sample API implementation - this is what developers should implement
   const handleAuthenticate = async (hiveResult: HiveAuthResult): Promise<string> => {
@@ -153,6 +151,18 @@ function App() {
                 </p>
                 <p className="text-xs mt-1">
                   Check the browser console to see the full request/response flow.
+                </p>
+              </div>
+
+              <div className="mt-4 p-4 bg-base-200 rounded-lg">
+                <h4 className="font-semibold mb-2">State Management:</h4>
+                <p className="text-xs">
+                  Use <code className="bg-base-300 px-1 rounded">useAuthStore()</code> to access{' '}
+                  <code className="bg-base-300 px-1 rounded">currentUser</code> and{' '}
+                  <code className="bg-base-300 px-1 rounded">loggedInUsers</code>.
+                </p>
+                <p className="text-xs mt-1">
+                  Subscribe to changes using <code className="bg-base-300 px-1 rounded">useAuthStore.subscribe()</code>.
                 </p>
               </div>
             </div>

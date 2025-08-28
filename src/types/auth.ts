@@ -21,12 +21,13 @@ export interface LoggedInUser {
 }
 
 export interface AuthStore {
+  // Read-only state
   currentUser: LoggedInUser | null;
   loggedInUsers: LoggedInUser[];
   isLoading: boolean;
   error: string | null;
   
-  // Actions
+  // Actions (package internal use only)
   setCurrentUser: (user: LoggedInUser | null) => void;
   addLoggedInUser: (user: LoggedInUser) => void;
   removeLoggedInUser: (username: string) => Promise<void>;
@@ -34,23 +35,12 @@ export interface AuthStore {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   
-  // New callback-based authentication
+  // Authentication
   authenticateWithCallback: (
     hiveResult: HiveAuthResult,
     callback: (hiveResult: HiveAuthResult) => Promise<string>
   ) => Promise<void>;
 }
-
-// Event types for the callback system
-export type AuthEventType = 'login' | 'logout' | 'user_switch' | 'user_add' | 'user_remove';
-
-export interface AuthEvent {
-  type: AuthEventType;
-  user?: LoggedInUser;
-  previousUser?: LoggedInUser;
-}
-
-export type AuthEventListener = (event: AuthEvent) => void;
 
 export interface SwitchUserModalProps {
   isOpen: boolean;

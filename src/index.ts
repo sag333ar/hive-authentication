@@ -5,7 +5,6 @@ export { SwitchUserModal } from './components/SwitchUserModal';
 
 // Store and hooks
 export { useAuthStore } from './store/authStore';
-export { addAuthEventListener } from './store/authStore';
 
 // Services
 export { AuthService } from './services/authService';
@@ -16,9 +15,6 @@ export type {
   ServerAuthResponse,
   LoggedInUser,
   AuthStore,
-  AuthEventType,
-  AuthEvent,
-  AuthEventListener,
-  LoginDialogProps,
-  SwitchUserModalProps
+  SwitchUserModalProps,
+  LoginDialogProps
 } from './types/auth';

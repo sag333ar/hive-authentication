@@ -1,6 +1,6 @@
 # Hive Authentication
 
-A React package for Hive blockchain authentication with a simple callback-based API.
+A React package for Hive blockchain authentication with a simple callback-based API and Zustand state management.
 
 ## Installation
 
@@ -19,29 +19,21 @@ import 'hive-authentication/build.css';
 ### 2. Use the Auth Button with Callback
 
 ```tsx
-import { AuthButton, useAuthStore, addAuthEventListener } from 'hive-authentication';
+import { AuthButton, useAuthStore } from 'hive-authentication';
 
 function App() {
-  // Listen to authentication events
+  const { currentUser, loggedInUsers } = useAuthStore();
+
+  // Subscribe to store changes using Zustand
   useEffect(() => {
-    const unsubscribe = addAuthEventListener((event) => {
-      switch (event.type) {
-        case 'login':
-          console.log('User logged in:', event.user);
-          break;
-        case 'logout':
-          console.log('User logged out:', event.previousUser);
-          break;
-        case 'user_switch':
-          console.log('User switched to:', event.user);
-          break;
-      }
+    const unsubscribe = useAuthStore.subscribe((state) => {
+      console.log('Store state changed:', state);
     });
 
     return unsubscribe;
   }, []);
 
-  // Your authentication callback
+  // Your authentication callback - works for both login AND adding accounts
   const handleAuthenticate = async (hiveResult) => {
     // Make your API call here
     const response = await fetch('/api/login', {
@@ -69,6 +61,10 @@ function App() {
     <div>
       <h1>My App</h1>
       <AuthButton onAuthenticate={handleAuthenticate} />
+      
+      {currentUser && (
+        <p>Welcome, {currentUser.username}!</p>
+      )}
     </div>
   );
 }
@@ -79,7 +75,7 @@ function App() {
 1. **User clicks login** → Package shows login modal
 2. **User enters username** → Package authenticates with Hive blockchain
 3. **Package calls your callback** → Your app makes API call to your server
-4. **Your app returns result** → Package stores the data and triggers events
+4. **Your app returns result** → Package stores the data and updates state
 5. **If callback fails** → Package automatically logs out the user
 
 **Important**: The same callback function is used for:
@@ -88,29 +84,35 @@ function App() {
 
 This ensures consistent authentication flow for all user operations.
 
-## Callback Flow
+## State Management
 
-The `onAuthenticate` callback is automatically triggered whenever the package needs to verify a user with your server:
+The package uses Zustand for state management. You can access the authentication state directly:
 
-### Initial Login
-1. User clicks "Login" button
-2. User enters Hive username
-3. Package authenticates with Hive blockchain
-4. **Package calls your callback** with Hive result
-5. Your callback makes API call to your server
-6. If successful, user is logged in
+```tsx
+const { currentUser, loggedInUsers, isLoading, error } = useAuthStore();
+```
 
-### Adding Account
-1. User clicks "Add Account" in switch user modal
-2. User enters new Hive username
-3. Package authenticates with Hive blockchain
-4. **Package calls your callback** with Hive result
-5. Your callback makes API call to your server
-6. If successful, new account is added to user list
+### State Properties
 
-### Error Handling
-- If your callback throws an error, the user is automatically logged out
-- This ensures clean state management if server authentication fails
+- `currentUser`: Currently logged-in user (or null)
+- `loggedInUsers`: Array of all logged-in users
+- `isLoading`: Whether authentication is in progress
+- `error`: Any error message (or null)
+
+### Subscribing to Changes
+
+Use Zustand's built-in subscription to react to state changes:
+
+```tsx
+useEffect(() => {
+  const unsubscribe = useAuthStore.subscribe((state) => {
+    // React to any state changes
+    console.log('Auth state changed:', state);
+  });
+
+  return unsubscribe;
+}, []);
+```
 
 ## API Reference
 
@@ -131,28 +133,6 @@ interface AuthButtonProps {
 <AuthButton onAuthenticate={handleAuthenticate} />
 ```
 
-### Events
-
-#### `addAuthEventListener(listener)`
-Listen to authentication state changes.
-
-**Event Types:**
-- `login` - User logged in
-- `logout` - User logged out  
-- `user_switch` - User switched
-- `user_add` - User added to list
-- `user_remove` - User removed from list
-
-**Usage:**
-```tsx
-const unsubscribe = addAuthEventListener((event) => {
-  console.log('Auth event:', event.type, event.user);
-});
-
-// Clean up
-unsubscribe();
-```
-
 ### Store
 
 #### `useAuthStore()`
@@ -163,12 +143,9 @@ Access authentication state and actions.
 const { currentUser, loggedInUsers, isLoading, error } = useAuthStore();
 ```
 
-**Actions:**
-```tsx
-const { setCurrentUser, removeLoggedInUser, clearAllUsers } = useAuthStore();
-```
+**Note**: The store provides read-only access to state. All modifications are handled internally by the package.
 
-## Types
+### Types
 
 ```tsx
 interface HiveAuthResult {
