@@ -1,4 +1,4 @@
-import { initAioha, Providers } from '@aioha/aioha';
+import { initAioha, KeyTypes, Providers } from '@aioha/aioha';
 import type { HiveAuthResult } from '../types/auth';
 
 export class AuthService {
@@ -20,7 +20,7 @@ export class AuthService {
       const timestamp = new Date().toISOString();
       
       // Login with Hive blockchain
-      const result = await this.aioha.login(Providers.Keychain, username, { msg: timestamp });
+      const result = await this.aioha.login(Providers.Keychain, username, { msg: timestamp, keyType: KeyTypes.Posting });
       
       if (!result.success) {
         throw new Error(result.error || 'Hive authentication failed');
