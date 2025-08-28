@@ -11,8 +11,14 @@ export class AuthService {
   }
 
   static async loginWithHive(username: string): Promise<HiveAuthResult> {
+    // Auto-initialize if not already initialized
     if (!this.aioha) {
-      throw new Error('Aioha not initialized. Call initialize() first.');
+      await this.initialize();
+    }
+
+    // Double-check that initialization was successful
+    if (!this.aioha) {
+      throw new Error('Failed to initialize Aioha');
     }
 
     try {
@@ -45,7 +51,14 @@ export class AuthService {
 
   // Logout the current authenticated user
   static async logout(): Promise<void> {
+    // Auto-initialize if not already initialized
     if (!this.aioha) {
+      await this.initialize();
+    }
+
+    // Double-check that initialization was successful
+    if (!this.aioha) {
+      console.warn('Failed to initialize Aioha for logout');
       return;
     }
 
@@ -58,8 +71,14 @@ export class AuthService {
 
   // Remove a specific user from Aioha provider
   static async removeUser(username: string): Promise<unknown> {
+    // Auto-initialize if not already initialized
     if (!this.aioha) {
-      throw new Error('Aioha not initialized. Call initialize() first.');
+      await this.initialize();
+    }
+
+    // Double-check that initialization was successful
+    if (!this.aioha) {
+      throw new Error('Failed to initialize Aioha');
     }
 
     try {
