@@ -29,8 +29,8 @@ export interface AuthStore {
   // Actions
   setCurrentUser: (user: LoggedInUser | null) => void;
   addLoggedInUser: (user: LoggedInUser) => void;
-  removeLoggedInUser: (username: string) => void;
-  clearAllUsers: () => void;
+  removeLoggedInUser: (username: string) => Promise<void>;
+  clearAllUsers: () => Promise<void>;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   

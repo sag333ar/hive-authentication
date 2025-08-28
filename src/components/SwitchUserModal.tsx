@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useAuthStore } from '../store/authStore';
 import { LoginDialog } from './LoginDialog';
+import { useAuthStore } from '../store/authStore';
+import type { LoggedInUser } from '../types/auth';
 
 interface SwitchUserModalProps {
   isOpen: boolean;
@@ -11,7 +12,7 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({ isOpen, onClos
   const [showAddAccount, setShowAddAccount] = useState(false);
   const { currentUser, loggedInUsers, setCurrentUser, removeLoggedInUser, clearAllUsers } = useAuthStore();
   
-  const handleSwitchUser = (user: any) => {
+  const handleSwitchUser = (user: LoggedInUser) => {
     setCurrentUser(user);
     onClose();
   };

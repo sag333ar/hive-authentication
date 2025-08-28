@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import CryptoJS from 'crypto-js';
 import type { AuthStore, LoggedInUser, AuthEvent, AuthEventListener } from '../types/auth';
+import { AuthService } from '../services/authService';
 
 // Event system
 const listeners: AuthEventListener[] = [];
@@ -20,12 +21,12 @@ export const addAuthEventListener = (listener: AuthEventListener) => {
 };
 
 // Encryption/Decryption helpers
-const encryptData = (data: any): string => {
+const encryptData = (data: unknown): string => {
   const key = import.meta.env.VITE_LOCAL_KEY || 'default-key';
   return CryptoJS.AES.encrypt(JSON.stringify(data), key).toString();
 };
 
-const decryptData = (encryptedData: string): any => {
+const decryptData = (encryptedData: string): unknown => {
   try {
     const key = import.meta.env.VITE_LOCAL_KEY || 'default-key';
     const bytes = CryptoJS.AES.decrypt(encryptedData, key);
@@ -46,7 +47,7 @@ const cleanupOldStorage = () => {
 };
 
 // Initialize state from localStorage
-const initializeState = () => {
+const initializeState = (): { currentUser: LoggedInUser | null; loggedInUsers: LoggedInUser[] } => {
   if (typeof window === 'undefined') return { currentUser: null, loggedInUsers: [] };
   
   try {
@@ -56,7 +57,16 @@ const initializeState = () => {
     const users = encryptedUsers ? decryptData(encryptedUsers) : [];
     const currentUser = encryptedCurrentUser ? decryptData(encryptedCurrentUser) : null;
     
-    return { currentUser, loggedInUsers: users || [] };
+    // Type guard to ensure we have the correct types
+    const typedUsers = Array.isArray(users) ? users.filter((user): user is LoggedInUser => 
+      user && typeof user === 'object' && 'username' in user
+    ) : [];
+    
+    const typedCurrentUser = currentUser && typeof currentUser === 'object' && 'username' in currentUser 
+      ? currentUser as LoggedInUser 
+      : null;
+    
+    return { currentUser: typedCurrentUser, loggedInUsers: typedUsers };
   } catch (error) {
     console.error('Failed to initialize auth state:', error);
     return { currentUser: null, loggedInUsers: [] };
@@ -112,10 +122,17 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       emitEvent({ type: 'user_add', user });
     },
     
-    removeLoggedInUser: (username) => {
+    removeLoggedInUser: async (username) => {
       const { loggedInUsers, currentUser } = get();
       const userToRemove = loggedInUsers.find(u => u.username === username);
       const updatedUsers = loggedInUsers.filter(u => u.username !== username);
+      
+      // Remove user from Aioha provider
+      try {
+        await AuthService.removeUser(username);
+      } catch (error) {
+        console.error('Failed to remove user from Aioha provider:', error);
+      }
       
       // Encrypt and store
       const encryptedUsers = encryptData(updatedUsers);
@@ -135,7 +152,14 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       }
     },
     
-    clearAllUsers: () => {
+    clearAllUsers: async () => {
+      // Logout from Aioha provider
+      try {
+        await AuthService.logout();
+      } catch (error) {
+        console.error('Failed to logout from Aioha provider:', error);
+      }
+      
       localStorage.removeItem('logged-in-users');
       localStorage.removeItem('logged-in-user');
       set({ currentUser: null, loggedInUsers: [] });
@@ -166,6 +190,14 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
         set({ error: errorMessage });
+        
+        // Logout on authentication error
+        try {
+          await AuthService.logout();
+        } catch (logoutError) {
+          console.error('Failed to logout after authentication error:', logoutError);
+        }
+        
         throw error;
       } finally {
         set({ isLoading: false });
