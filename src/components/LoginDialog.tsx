@@ -64,7 +64,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
   
   return (
     <div className="modal modal-open">
-      <div className="modal-box relative">
+      <div className="modal-box relative max-w-md mx-auto">
         <div className="flex items-center justify-between mb-4">
           {showBackButton && (
             <button
@@ -80,7 +80,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
           </h3>
           
           <button
-            className="btn btn-sm btn-circle btn-ghost"
+            className="btn btn-sm btn-circle btn-ghost bg-base-200 hover:bg-base-300 border border-base-300"
             onClick={onClose}
           >
             ✕

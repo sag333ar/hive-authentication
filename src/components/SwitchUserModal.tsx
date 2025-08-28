@@ -51,9 +51,9 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({ isOpen, onClos
   
     return (
     <div className="modal modal-open">
-      <div className="modal-box relative max-w-md">
+      <div className="modal-box relative max-w-md mx-auto">
         <button
-          className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+          className="btn btn-sm btn-circle btn-ghost bg-base-200 hover:bg-base-300 border border-base-300 absolute right-2 top-2"
           onClick={onClose}
         >
           ✕
