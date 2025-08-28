@@ -60,7 +60,18 @@ function App() {
   return (
     <div>
       <h1>My App</h1>
-      <AuthButton onAuthenticate={handleAuthenticate} />
+      <AuthButton 
+        onAuthenticate={handleAuthenticate}
+        hiveauth={{
+          name: 'My Hive App',
+          description: 'A Hive blockchain application'
+        }}
+        hivesigner={{
+          app: 'myapp.app',
+          callbackURL: window.location.origin + '/hivesigner.html',
+          scope: ['login', 'vote']
+        }}
+      />
       
       {currentUser && (
         <p>Welcome, {currentUser.username}!</p>
@@ -69,6 +80,32 @@ function App() {
   );
 }
 ```
+
+## Configuration
+
+The `AuthButton` requires configuration for both HiveAuth and HiveSigner providers:
+
+### HiveAuth Configuration
+```tsx
+hiveauth={{
+  name: 'Your App Name',           // Required: Short name of your app
+  description: 'App description',   // Optional: Description of your app
+  icon: 'https://example.com/icon' // Optional: URL to your app icon
+}}
+```
+
+### HiveSigner Configuration
+```tsx
+hivesigner={{
+  app: 'yourapp.app',                                    // Required: Your HiveSigner app account
+  callbackURL: 'https://yourapp.com/hivesigner.html',    // Required: Callback URL for HiveSigner
+  scope: ['login', 'vote']                               // Required: Array of authorized operations
+}}
+```
+
+**Note**: Both configurations are required even if you only plan to use one provider. This ensures the Aioha library is properly initialized with all necessary settings.
+
+**HiveAuth Support**: The package now supports HiveAuth configuration and will automatically initialize the Aioha library with your settings. HiveAuth login functionality is planned for future releases.
 
 ## How It Works
 

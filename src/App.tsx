@@ -86,7 +86,18 @@ function App() {
               This is a demo of the Hive Authentication package with a working API integration.
             </p>
             <div className="card-actions justify-center mt-4">
-              <AuthButton onAuthenticate={handleAuthenticate} />
+              <AuthButton 
+                onAuthenticate={handleAuthenticate}
+                hiveauth={{
+                  name: 'Hive Authentication Demo',
+                  description: 'A demo app for testing Hive authentication'
+                }}
+                hivesigner={{
+                  app: 'hive-auth-demo.app',
+                  callbackURL: window.location.origin + '/hivesigner.html',
+                  scope: ['login', 'vote']
+                }}
+              />
             </div>
           </div>
         </div>

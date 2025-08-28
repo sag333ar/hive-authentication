@@ -33,7 +33,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
       // Initialize Aioha if needed
       await AuthService.initialize();
       
-      // First get the Hive authentication result
+      // Get the Hive authentication result
       const hiveResult = await AuthService.loginWithHive(username.trim());
       
       // Check if callback is provided

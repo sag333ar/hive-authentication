@@ -4,9 +4,9 @@ import type { HiveAuthResult } from '../types/auth';
 export class AuthService {
   private static aioha: ReturnType<typeof initAioha> | null = null;
 
-  static async initialize(): Promise<void> {
+  static async initialize(config?: any): Promise<void> {
     if (!this.aioha) {
-      this.aioha = await initAioha();
+      this.aioha = await initAioha(config || {});
     }
   }
 

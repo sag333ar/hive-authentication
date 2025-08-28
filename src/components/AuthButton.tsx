@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { LoginDialog } from './LoginDialog';
 import { SwitchUserModal } from './SwitchUserModal';
-import type { HiveAuthResult } from '../types/auth';
+import type { AuthButtonProps } from '../types/auth';
 
-interface AuthButtonProps {
-  onAuthenticate: (hiveResult: HiveAuthResult) => Promise<string>;
-}
-
-export const AuthButton: React.FC<AuthButtonProps> = ({ onAuthenticate }) => {
+export const AuthButton: React.FC<AuthButtonProps> = ({ 
+  onAuthenticate, 
+  hiveauth, 
+  hivesigner 
+}) => {
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const [isSwitchUserModalOpen, setIsSwitchUserModalOpen] = useState(false);
   const { currentUser } = useAuthStore();
+  
+  // Create the config object
+  const config = { hiveauth, hivesigner };
   
   const handleButtonClick = () => {
     if (currentUser) {
@@ -58,12 +61,14 @@ export const AuthButton: React.FC<AuthButtonProps> = ({ onAuthenticate }) => {
         isOpen={isLoginDialogOpen}
         onClose={() => setIsLoginDialogOpen(false)}
         onAuthenticate={onAuthenticate}
+        config={config}
       />
       
       <SwitchUserModal
         isOpen={isSwitchUserModalOpen}
         onClose={() => setIsSwitchUserModalOpen(false)}
         onAuthenticate={onAuthenticate}
+        config={config}
       />
     </>
   );
