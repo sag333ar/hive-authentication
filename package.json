@@ -29,6 +29,7 @@
     "@tailwindcss/vite": "^4.1.12",
     "crypto-js": "^4.2.0",
     "daisyui": "^5.0.50",
+    "qrcode": "^1.5.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "zustand": "^5.0.8"
@@ -36,6 +37,7 @@
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@types/crypto-js": "^4.2.2",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.0",

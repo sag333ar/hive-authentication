@@ -132,12 +132,20 @@ When a user chooses HiveAuth login:
 
 1. **Login Request**: User clicks "Login with HiveAuth" button
 2. **Event Emission**: Aioha library emits a `hiveauth_login_request` event
-3. **QR Code Display**: Package automatically displays a QR code with the login payload
-4. **Wallet Scan**: User scans QR code with their HiveAuth wallet app
-5. **Wallet Approval**: User approves the login in their wallet
-6. **Authentication Complete**: Package receives the authentication result and proceeds with your callback
+3. **Form Hiding**: Login form (username input and buttons) is automatically hidden
+4. **QR Code Generation**: Package generates a QR code from the HiveAuth payload
+5. **QR Code Display**: Large, scannable QR code is displayed with 30-second countdown timer
+6. **Wallet Scan**: User scans QR code with their HiveAuth wallet app
+7. **Wallet Approval**: User approves the login in their wallet
+8. **Authentication Complete**: Package receives the authentication result and proceeds with your callback
+9. **Timer Expiry**: If 30 seconds pass without approval, QR code expires and login form reappears
 
-The QR code is automatically generated and displayed, so you don't need to implement any additional UI for HiveAuth support.
+**Key Features:**
+- **Automatic Form Hiding**: Login form disappears when QR code is shown
+- **Real QR Code**: Actual QR code generated from HiveAuth payload (not placeholder)
+- **30-Second Timer**: Countdown timer with automatic expiry
+- **Cancel Option**: User can manually cancel QR code display
+- **Seamless UX**: Smooth transition between login form and QR code display
 
 ## State Management
 
