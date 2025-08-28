@@ -82,6 +82,36 @@ function App() {
 4. **Your app returns result** → Package stores the data and triggers events
 5. **If callback fails** → Package automatically logs out the user
 
+**Important**: The same callback function is used for:
+- **Initial login** (when user first logs in)
+- **Adding accounts** (when user clicks "Add Account" in the switch user modal)
+
+This ensures consistent authentication flow for all user operations.
+
+## Callback Flow
+
+The `onAuthenticate` callback is automatically triggered whenever the package needs to verify a user with your server:
+
+### Initial Login
+1. User clicks "Login" button
+2. User enters Hive username
+3. Package authenticates with Hive blockchain
+4. **Package calls your callback** with Hive result
+5. Your callback makes API call to your server
+6. If successful, user is logged in
+
+### Adding Account
+1. User clicks "Add Account" in switch user modal
+2. User enters new Hive username
+3. Package authenticates with Hive blockchain
+4. **Package calls your callback** with Hive result
+5. Your callback makes API call to your server
+6. If successful, new account is added to user list
+
+### Error Handling
+- If your callback throws an error, the user is automatically logged out
+- This ensures clean state management if server authentication fails
+
 ## API Reference
 
 ### Components
