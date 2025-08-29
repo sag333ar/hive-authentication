@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { AuthService } from '../services/authService';
-import type { LoginDialogProps, HiveAuthEvent } from '../types/auth';
+import type { LoginDialogProps } from '../types/auth';
 import QRCode from 'qrcode';
+import { useAioha } from '@aioha/react-provider'
 
 export const LoginDialog: React.FC<LoginDialogProps> = ({
   isOpen,
@@ -12,16 +13,16 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
   onAuthenticate,
   config
 }) => {
+  const { aioha } = useAioha()
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [hiveAuthPayload, setHiveAuthPayload] = useState<string | null>(null);
   const [showQRCode, setShowQRCode] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [timeRemaining, setTimeRemaining] = useState<number>(30);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { isLoading, authenticateWithCallback } = useAuthStore();
+  const { isLoading, authenticateWithCallback, hiveAuthPayload, setHiveAuthPayload, currentUser } = useAuthStore();
 
   useEffect(() => {
     if (username.trim()) {
@@ -30,6 +31,12 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
       setAvatarUrl(null);
     }
   }, [username]);
+
+  useEffect(() => {
+    if (hiveAuthPayload) {
+      handleHiveAuthRequest(hiveAuthPayload);
+    }
+  }, [hiveAuthPayload]);
 
   // Handle HiveAuth request and generate QR code
   const handleHiveAuthRequest = async (payload: string) => {
@@ -45,7 +52,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
       });
       
       setQrCodeDataUrl(qrDataUrl);
-      setHiveAuthPayload(payload);
       setShowQRCode(true);
       
       // Start 30-second timer
@@ -110,14 +116,9 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
       }
 
       // Initialize Aioha with configuration
-      if (config) {
-        await AuthService.initialize(config);
-      } else {
-        throw new Error('Configuration is required for authentication');
-      }
-
+      
       // Get the Hive authentication result
-      const hiveResult = keychain ? await AuthService.loginWithHiveKeychain(username.trim()) : await AuthService.loginWithHiveAuth(username.trim());
+      const hiveResult = keychain ? await AuthService.loginWithHiveKeychain(aioha, username.trim()) : await AuthService.loginWithHiveAuth(aioha, username.trim());
 
       // Check if callback is provided
       if (!onAuthenticate) {
@@ -128,15 +129,16 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
       await authenticateWithCallback(
         hiveResult,
         onAuthenticate,
-        config,
-        config?.hiveauth ? (event: HiveAuthEvent) => {
-          handleHiveAuthRequest(event.payload);
-        } : undefined
+        config
       );
 
       onClose();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      if (currentUser) {
+        aioha.switchUser(currentUser.username);
+        aioha.removeOtherLogin(username.trim());
+      }
       setError(errorMessage);
     }
   };

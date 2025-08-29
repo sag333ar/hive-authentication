@@ -65,7 +65,8 @@ export const useAuthStore = create<AuthStore>((set, get) => {
     ...initialState,
     isLoading: false,
     error: null,
-    
+    hiveAuthPayload: null,
+    setHiveAuthPayload: (payload) => set({ hiveAuthPayload: payload }),
     setLoading: (loading) => set({ isLoading: loading }),
     
     setError: (error) => set({ error }),
@@ -97,13 +98,6 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       const { loggedInUsers, currentUser } = get();
       const updatedUsers = loggedInUsers.filter(u => u.username !== username);
       
-      // Remove user from Aioha provider
-      try {
-        await AuthService.removeUser(username);
-      } catch (error) {
-        console.error('Failed to remove user from Aioha provider:', error);
-      }
-      
       // Encrypt and store
       const encryptedUsers = encryptData(updatedUsers);
       localStorage.setItem('logged-in-users', encryptedUsers);
@@ -118,29 +112,16 @@ export const useAuthStore = create<AuthStore>((set, get) => {
     },
     
     clearAllUsers: async () => {
-      // Logout from Aioha provider
-      try {
-        await AuthService.logout();
-      } catch (error) {
-        console.error('Failed to logout from Aioha provider:', error);
-      }
-      
+
       localStorage.removeItem('logged-in-users');
       localStorage.removeItem('logged-in-user');
       set({ currentUser: null, loggedInUsers: [] });
     },
     
-    authenticateWithCallback: async (hiveResult, callback, config, onHiveAuthRequest) => {
+    authenticateWithCallback: async (hiveResult, callback) => {
       set({ isLoading: true, error: null });
       
       try {
-        // Initialize AuthService with configuration and HiveAuth callback
-        if (config) {
-          await AuthService.initialize(config, onHiveAuthRequest);
-        } else {
-          throw new Error('Configuration is required for authentication');
-        }
-        
         // Call the dev's callback function
         const serverResponse = await callback(hiveResult);
         
@@ -161,14 +142,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
         set({ error: errorMessage });
-        
-        // Logout on authentication error
-        try {
-          await AuthService.logout();
-        } catch (logoutError) {
-          console.error('Failed to logout after authentication error:', logoutError);
-        }
-        
+
         throw error;
       } finally {
         set({ isLoading: false });

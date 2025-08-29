@@ -1,17 +1,28 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { LoginDialog } from './LoginDialog';
 import { SwitchUserModal } from './SwitchUserModal';
 import type { AuthButtonProps } from '../types/auth';
+import { initAioha } from '@aioha/aioha';
+import { AiohaProvider } from '@aioha/react-provider'
+
+const aioha = initAioha()
 
 export const AuthButton: React.FC<AuthButtonProps> = ({ 
   onAuthenticate, 
   hiveauth, 
   hivesigner
 }) => {
+  const { setHiveAuthPayload } = useAuthStore();
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const [isSwitchUserModalOpen, setIsSwitchUserModalOpen] = useState(false);
   const { currentUser } = useAuthStore();
+
+  useEffect(() => {
+    aioha.on('hiveauth_login_request', (payload: string) => {
+      setHiveAuthPayload(payload);
+    });
+  }, [aioha]);
   
   // Create the config object
   const config = { hiveauth, hivesigner };
@@ -31,7 +42,7 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
   };
   
   return (
-    <>
+    <AiohaProvider aioha={aioha}>
       <button
         onClick={handleButtonClick}
         className="btn btn-primary"
@@ -70,6 +81,6 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
         onAuthenticate={onAuthenticate}
         config={config}
       />
-    </>
+    </AiohaProvider>
   );
 };

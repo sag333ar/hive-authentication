@@ -1,39 +1,12 @@
 import React, { useEffect } from 'react';
-import { AuthButton, useAuthStore, addAuthEventListener } from 'hive-authentication';
+import { AuthButton, useAuthStore } from 'hive-authentication';
 import 'hive-authentication/build.css';
 
 function App() {
   const { currentUser, loggedInUsers } = useAuthStore();
 
-  // Listen to authentication events
-  useEffect(() => {
-    const unsubscribe = addAuthEventListener((event) => {
-      switch (event.type) {
-        case 'login':
-          console.log('User logged in:', event.user);
-          break;
-        case 'logout':
-          console.log('User logged out:', event.previousUser);
-          break;
-        case 'user_switch':
-          console.log('User switched to:', event.user);
-          break;
-        case 'user_add':
-          console.log('User added:', event.user);
-          break;
-        case 'user_remove':
-          console.log('User removed:', event.user);
-          break;
-      }
-    });
-
-    return unsubscribe;
-  }, []);
-
   // Your authentication callback - this is where you make your API call
   const handleAuthenticate = async (hiveResult) => {
-    console.log('Hive authentication result:', hiveResult);
-    
     // Make your API call here
     const response = await fetch('/api/login', {
       method: 'POST',
@@ -61,7 +34,13 @@ function App() {
       <h1 className="text-3xl font-bold mb-8">Hive Authentication Demo</h1>
       
       <div className="mb-8">
-        <AuthButton onAuthenticate={handleAuthenticate} />
+        <AuthButton onAuthenticate={handleAuthenticate} hiveauth={{
+          name: 'HiveAuth',
+          description: 'HiveAuth',
+          icon: 'https://images.hive.blog/u/sagarkothari88/avatar'
+        }} hivesigner={{
+          app: 'HiveSigner',
+        }} />
       </div>
 
       {currentUser && (

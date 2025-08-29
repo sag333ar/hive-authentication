@@ -36,7 +36,7 @@ function App() {
     
     try {
       // Make API call to your server
-      const response = await fetch('https://beta-api.distriator.com/login', {
+      const response = await fetch('https://beta-api.distriator.com/login2', {
         method: 'POST',
         headers: {
           'Accept': '*/*',

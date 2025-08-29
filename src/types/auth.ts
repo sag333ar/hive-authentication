@@ -18,6 +18,7 @@ export interface LoggedInUser {
   publicKey: string;
   proof: string;
   serverResponse: string; // JSON string from dev's app
+  privatePostingKey?: string;
 }
 
 export interface AuthStore {
@@ -26,6 +27,7 @@ export interface AuthStore {
   loggedInUsers: LoggedInUser[];
   isLoading: boolean;
   error: string | null;
+  hiveAuthPayload: string | null;
   
   // Actions (package internal use only)
   setCurrentUser: (user: LoggedInUser | null) => void;
@@ -34,13 +36,13 @@ export interface AuthStore {
   clearAllUsers: () => Promise<void>;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  
+  setHiveAuthPayload: (payload: string | null) => void;
+
   // Authentication
   authenticateWithCallback: (
     hiveResult: HiveAuthResult,
     callback: (hiveResult: HiveAuthResult) => Promise<string>,
-    config?: AiohaConfig,
-    onHiveAuthRequest?: (event: HiveAuthEvent) => void
+    config?: AiohaConfig
   ) => Promise<void>;
 }
 
@@ -74,8 +76,6 @@ export interface AuthButtonProps {
     callbackURL: string;
     scope: string[];
   };
-  // HiveAuth event callback (optional)
-  onHiveAuthRequest?: (event: HiveAuthEvent) => void;
 }
 
 export interface AiohaConfig {
@@ -91,8 +91,3 @@ export interface AiohaConfig {
   };
 }
 
-export interface HiveAuthEvent {
-  type: 'hiveauth_login_request';
-  payload: string; // QR code data
-  username: string;
-}

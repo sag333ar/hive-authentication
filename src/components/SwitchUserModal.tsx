@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { LoginDialog } from './LoginDialog';
 import { useAuthStore } from '../store/authStore';
 import type { LoggedInUser, SwitchUserModalProps } from '../types/auth';
+import { AuthService } from '../services/authService';
+import { useAioha } from '@aioha/react-provider';
 
 export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({ 
   isOpen, 
@@ -9,16 +11,19 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
   onAuthenticate,
   config
 }) => {
+  const { aioha } = useAioha()
   const [showAddAccount, setShowAddAccount] = useState(false);
   const { currentUser, loggedInUsers, setCurrentUser, removeLoggedInUser, clearAllUsers } = useAuthStore();
   
   const handleSwitchUser = (user: LoggedInUser) => {
     setCurrentUser(user);
+    AuthService.switchUser(aioha, user.username);
     onClose();
   };
   
   const handleLogoutUser = (username: string) => {
     removeLoggedInUser(username);
+    AuthService.removeUser(aioha, username);
   };
   
   const handleLogoutAll = () => {
