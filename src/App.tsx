@@ -111,7 +111,7 @@ function App() {
                 <p><strong>Username:</strong> {currentUser.username}</p>
                 <p><strong>Provider:</strong> {currentUser.provider}</p>
                 <p><strong>Public Key:</strong> {currentUser.publicKey.substring(0, 20)}...</p>
-                <p><strong>Server Response:</strong> {currentUser.serverResponse}</p>
+                <p><strong>Server Response:</strong> {currentUser.serverResponse.substring(0, 20)}...</p>
               </div>
             </div>
           </div>

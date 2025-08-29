@@ -173,7 +173,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
 
   return (
     <div className="modal modal-open">
-      <div className="modal-box absolute">
+      <div className="modal-box absolute top-1/3">
         <div className="flex items-center justify-between mb-4">
           {showBackButton && (
             <button
