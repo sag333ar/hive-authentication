@@ -4,7 +4,6 @@ import { useAuthStore } from '../store/authStore';
 import type { LoggedInUser, SwitchUserModalProps } from '../types/auth';
 import { AuthService } from '../services/authService';
 import { useAioha } from '@aioha/react-provider';
-import { PlaintextKeyProvider } from '@aioha/aioha/build/providers/custom/plaintext';
 
 export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({ 
   isOpen, 

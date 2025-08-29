@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import CryptoJS from 'crypto-js';
 import type { AuthStore, LoggedInUser } from '../types/auth';
-import { AuthService } from '../services/authService';
 
 // Encryption/Decryption helpers
 const encryptData = (data: unknown): string => {
