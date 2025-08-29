@@ -4,6 +4,10 @@ import { useAuthStore } from '../store/authStore';
 import type { LoggedInUser, SwitchUserModalProps } from '../types/auth';
 import { AuthService } from '../services/authService';
 import { useAioha } from '@aioha/react-provider';
+import KeychainIcon from '../assets/keychain.svg'
+import HiveAuthIcon from '../assets/hiveauth-light.svg'
+import PrivateKeyIcon from '../assets/privatekey.svg'
+
 
 export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({ 
   isOpen, 
@@ -40,6 +44,28 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
   
   const handleBackFromLogin = () => {
     setShowAddAccount(false);
+  };
+
+  const getProviderIcon = (provider: string) => {
+    switch (provider) {
+      case 'keychain':
+        return KeychainIcon;
+      case 'hiveauth':
+        return HiveAuthIcon;
+      case 'privatePostingKey':
+        return PrivateKeyIcon;
+    }
+  };
+
+  const getProviderName = (provider: string) => {
+    switch (provider) {
+      case 'keychain':
+        return 'Keychain';
+      case 'hiveauth':
+        return 'HiveAuth';
+      case 'privatePostingKey':
+        return 'PrivateKey';
+    }
   };
   
   if (!isOpen) return null;
@@ -92,11 +118,16 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
                   />
                 </div>
               </div>
+              <div className='avatar'>
+                <div className='w-10 h-10 rounded-full'>
+                  <img src={getProviderIcon(user.provider)} alt={`${getProviderName(user.provider)}`} />
+                </div>
+              </div>
               
               {/* Username */}
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{user.username}</p>
-                <p className="text-sm text-gray-500 capitalize">User</p>
+                <p className="text-sm text-gray-500 capitalize">{getProviderName(user.provider)}</p>
               </div>
               
               {/* Status/Action */}

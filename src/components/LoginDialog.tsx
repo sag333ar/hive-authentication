@@ -4,6 +4,10 @@ import { AuthService } from '../services/authService';
 import type { LoginDialogProps } from '../types/auth';
 import QRCode from 'qrcode';
 import { useAioha } from '@aioha/react-provider'
+import { Providers } from '@aioha/aioha';
+import KeychainIcon from '../assets/keychain.svg'
+import HiveAuthIcon from '../assets/hiveauth-light.svg'
+import PrivateKeyIcon from '../assets/privatekey.svg'
 
 export const LoginDialog: React.FC<LoginDialogProps> = ({
   isOpen,
@@ -23,9 +27,11 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
   const [loginMethod, setLoginMethod] = useState<'keychain' | 'hiveauth' | 'privateKey'>('keychain');
   const [privateKey, setPrivateKey] = useState('');
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isKeychainEnabled, setIsKeychainEnabled] = useState(false);
 
   const { isLoading, authenticateWithCallback, hiveAuthPayload, setHiveAuthPayload, currentUser } = useAuthStore();
 
+  // to update the avatar url when the username changes
   useEffect(() => {
     if (username.trim()) {
       setAvatarUrl(`https://images.hive.blog/u/${username}/avatar`);
@@ -34,11 +40,25 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
     }
   }, [username]);
 
+  // to handle the hiveauth payload
   useEffect(() => {
     if (hiveAuthPayload) {
       handleHiveAuthRequest(hiveAuthPayload);
     }
   }, [hiveAuthPayload]);
+
+  useEffect(() => {
+    const checkKeychain = async () => {
+      const isEnabled = await aioha.isProviderEnabled(Providers.Keychain);
+      setIsKeychainEnabled(isEnabled);
+      if (isEnabled) {
+        setLoginMethod('keychain');
+      } else {
+        setLoginMethod('hiveauth');
+      }
+    };
+    checkKeychain();
+  }, []);
 
   // Handle HiveAuth request and generate QR code
   const handleHiveAuthRequest = async (payload: string) => {
@@ -52,10 +72,10 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
           light: '#FFFFFF'
         }
       });
-      
+
       setQrCodeDataUrl(qrDataUrl);
       setShowQRCode(true);
-      
+
       // Start 30-second timer
       startTimer();
     } catch (error) {
@@ -67,11 +87,11 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
   // Start 30-second countdown timer
   const startTimer = () => {
     setTimeRemaining(30);
-    
+
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-    
+
     timerRef.current = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
@@ -111,7 +131,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
     setHiveAuthPayload(null);
     setShowQRCode(false);
     setQrCodeDataUrl('');
-    
+
     // Clear timer if running
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -124,7 +144,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
       }
 
       let hiveResult;
-      
+
       // Handle different login methods
       switch (loginMethod) {
         case 'keychain':
@@ -203,24 +223,24 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
             <p className="text-sm text-gray-600 mb-4">
               Scan this QR code with your HiveAuth wallet app to approve the login for <strong>{username}</strong>
             </p>
-            
+
             {/* Timer */}
             <div className="mb-4">
               <div className="text-sm text-gray-500 mb-2">QR Code expires in:</div>
               <div className="text-2xl font-bold text-primary">{timeRemaining}s</div>
             </div>
-            
+
             {/* QR Code */}
             <div className="flex justify-center mb-4">
               <div className="bg-white p-4 rounded-lg border shadow-lg">
                 <img src={qrCodeDataUrl} alt="HiveAuth QR Code" className="w-48 h-48" />
               </div>
             </div>
-            
+
             <p className="text-xs text-gray-500">
               Waiting for wallet approval...
             </p>
-            
+
             {/* Cancel button */}
             <button
               className="btn btn-outline btn-sm mt-4"
@@ -267,39 +287,46 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
                   placeholder="Enter username"
                   className="input input-bordered flex-1"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Only allow lowercase letters, digits, dots, and hyphens
+                    const filteredValue = value.toLowerCase().replace(/[^a-z0-9.-]/g, '');
+                    setUsername(filteredValue);
+                  }}
                   onKeyPress={handleKeyPress}
                   disabled={isLoading}
+                  pattern="[a-z0-9.-]+"
+                  title="Only lowercase letters, numbers, dots, and hyphens are allowed"
                 />
               </div>
             </div>
 
             {/* Private Key Input Field - Only show when private key method is selected */}
             {loginMethod === 'privateKey' && (
-                <div className="form-control w-full mt-4">
-                  <label className="label">
-                    <span className="label-text">Posting Key</span>
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Enter your private posting key"
-                    className="input input-bordered w-full"
-                    value={privateKey}
-                    onChange={(e) => setPrivateKey(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    disabled={isLoading}
-                  />
-                </div>
-              )}
+              <div className="form-control w-full mt-4">
+                <label className="label">
+                  <span className="label-text">Posting Key</span>
+                </label>
+                <input
+                  type="password"
+                  placeholder="Enter your private posting key"
+                  className="input input-bordered w-full"
+                  value={privateKey}
+                  onChange={(e) => setPrivateKey(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  disabled={isLoading}
+                />
+              </div>
+            )}
 
             <div className="mt-4">
               <p className="text-sm text-gray-600 mb-3">
                 Choose your login method:
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 {/* Radio buttons for login methods */}
-                <div className="form-control">
+                <div className="form-control" style={{ display: isKeychainEnabled ? 'flex' : 'none' }}>
                   <label className="label cursor-pointer border border-base-300 rounded-lg px-4 py-2 hover:bg-base-100 transition-colors">
                     <input
                       type="radio"
@@ -309,6 +336,9 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
                       onChange={() => setLoginMethod('keychain')}
                       disabled={isLoading}
                     />
+                    <span className="label-text">
+                      <img src={KeychainIcon} alt="Keychain" className='w-10 h-10' />
+                    </span>
                     <span className="label-text">Keychain</span>
                   </label>
                 </div>
@@ -323,6 +353,9 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
                       onChange={() => setLoginMethod('hiveauth')}
                       disabled={isLoading || !config?.hiveauth}
                     />
+                    <span className="label-text">
+                      <img src={HiveAuthIcon} alt="HiveAuth" className='w-10 h-10' />
+                    </span>
                     <span className="label-text">HiveAuth</span>
                   </label>
                 </div>
@@ -337,12 +370,15 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
                       onChange={() => setLoginMethod('privateKey')}
                       disabled={isLoading}
                     />
+                    <span className="label-text">
+                      <img src={PrivateKeyIcon} alt="Private Key" className='w-10 h-10' />
+                    </span>
                     <span className="label-text">PostingKey</span>
                   </label>
                 </div>
               </div>
 
-              
+
 
               {/* Login Button */}
               <button
