@@ -4,6 +4,7 @@ export interface HiveAuthResult {
   publicKey: string;
   username: string;
   proof: string;      // This will be the timestamp
+  privatePostingKey?: string;
 }
 
 export interface ServerAuthResponse {

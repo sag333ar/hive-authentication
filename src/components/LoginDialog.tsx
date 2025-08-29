@@ -20,6 +20,8 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
   const [showQRCode, setShowQRCode] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [timeRemaining, setTimeRemaining] = useState<number>(30);
+  const [loginMethod, setLoginMethod] = useState<'keychain' | 'hiveauth' | 'privateKey'>('keychain');
+  const [privateKey, setPrivateKey] = useState('');
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const { isLoading, authenticateWithCallback, hiveAuthPayload, setHiveAuthPayload, currentUser } = useAuthStore();
@@ -96,8 +98,14 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
     };
   }, []);
 
-  const handleLogin = async (keychain: boolean = true) => {
+  const handleLogin = async () => {
     if (!username.trim()) return;
+
+    // Validate private key if that method is selected
+    if (loginMethod === 'privateKey' && !privateKey.trim()) {
+      setError('Please enter your private posting key');
+      return;
+    }
 
     setError(null);
     setHiveAuthPayload(null);
@@ -111,14 +119,26 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
 
     try {
       // Check if HiveAuth is selected but not configured
-      if (!keychain && !config?.hiveauth) {
+      if (loginMethod === 'hiveauth' && !config?.hiveauth) {
         throw new Error('HiveAuth not configured. Please provide hiveauth configuration.');
       }
 
-      // Initialize Aioha with configuration
+      let hiveResult;
       
-      // Get the Hive authentication result
-      const hiveResult = keychain ? await AuthService.loginWithHiveKeychain(aioha, username.trim()) : await AuthService.loginWithHiveAuth(aioha, username.trim());
+      // Handle different login methods
+      switch (loginMethod) {
+        case 'keychain':
+          hiveResult = await AuthService.loginWithHiveKeychain(aioha, username.trim());
+          break;
+        case 'hiveauth':
+          hiveResult = await AuthService.loginWithHiveAuth(aioha, username.trim());
+          break;
+        case 'privateKey':
+          hiveResult = await AuthService.loginWithPrivatePostingKey(aioha, username.trim(), privateKey.trim());
+          break;
+        default:
+          throw new Error('Invalid login method selected');
+      }
 
       // Check if callback is provided
       if (!onAuthenticate) {
@@ -145,7 +165,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && username.trim() && !isLoading) {
-      handleLogin(true);
+      handleLogin();
     }
   };
 
@@ -254,46 +274,91 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
               </div>
             </div>
 
+            {/* Private Key Input Field - Only show when private key method is selected */}
+            {loginMethod === 'privateKey' && (
+                <div className="form-control w-full mt-4">
+                  <label className="label">
+                    <span className="label-text">Posting Key</span>
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Enter your private posting key"
+                    className="input input-bordered w-full"
+                    value={privateKey}
+                    onChange={(e) => setPrivateKey(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
+
             <div className="mt-4">
               <p className="text-sm text-gray-600 mb-3">
                 Choose your login method:
               </p>
 
-              <div className="space-y-2">
-                <button
-                  className="btn btn-primary w-full"
-                  onClick={() => handleLogin(true)}
-                  disabled={isLoading || !username.trim()}
-                >
-                  {isLoading ? (
-                    <>
-                      <span className="loading loading-spinner loading-sm"></span>
-                      Logging in...
-                    </>
-                  ) : (
-                    'Login with HiveKeychain'
-                  )}
-                </button>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                {/* Radio buttons for login methods */}
+                <div className="form-control">
+                  <label className="label cursor-pointer border border-base-300 rounded-lg px-4 py-2 hover:bg-base-100 transition-colors">
+                    <input
+                      type="radio"
+                      name="loginMethod"
+                      className="radio radio-primary"
+                      checked={loginMethod === 'keychain'}
+                      onChange={() => setLoginMethod('keychain')}
+                      disabled={isLoading}
+                    />
+                    <span className="label-text">Keychain</span>
+                  </label>
+                </div>
 
-                <button
-                  className="btn btn-outline w-full"
-                  onClick={() => handleLogin(false)}
-                  disabled={isLoading || !username.trim() || !config?.hiveauth}
-                >
-                  {isLoading ? (
-                    <>
-                      <span className="loading loading-spinner loading-sm"></span>
-                      Logging in...
-                    </>
-                  ) : (
-                    'Login with HiveAuth'
-                  )}
-                </button>
+                <div className="form-control">
+                  <label className="label cursor-pointer border border-base-300 rounded-lg px-4 py-2 hover:bg-base-100 transition-colors">
+                    <input
+                      type="radio"
+                      name="loginMethod"
+                      className="radio radio-primary"
+                      checked={loginMethod === 'hiveauth'}
+                      onChange={() => setLoginMethod('hiveauth')}
+                      disabled={isLoading || !config?.hiveauth}
+                    />
+                    <span className="label-text">HiveAuth</span>
+                  </label>
+                </div>
 
-                <button className="btn btn-outline w-full" disabled>
-                  Private Posting Key (Coming Soon)
-                </button>
+                <div className="form-control">
+                  <label className="label cursor-pointer border border-base-300 rounded-lg px-4 py-2 hover:bg-base-100 transition-colors">
+                    <input
+                      type="radio"
+                      name="loginMethod"
+                      className="radio radio-primary"
+                      checked={loginMethod === 'privateKey'}
+                      onChange={() => setLoginMethod('privateKey')}
+                      disabled={isLoading}
+                    />
+                    <span className="label-text">PostingKey</span>
+                  </label>
+                </div>
               </div>
+
+              
+
+              {/* Login Button */}
+              <button
+                className="btn btn-primary w-full mt-4"
+                onClick={handleLogin}
+                disabled={isLoading || !username.trim() || (loginMethod === 'privateKey' && !privateKey.trim())}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm"></span>
+                    Logging in...
+                  </>
+                ) : (
+                  'Login'
+                )}
+              </button>
             </div>
           </>
         )}

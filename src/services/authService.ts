@@ -1,6 +1,8 @@
 import { Aioha, KeyTypes, Providers } from '@aioha/aioha';
 import type { HiveAuthResult } from '../types/auth';
-
+import { PlaintextKeyProvider } from '@aioha/aioha/build/providers/custom/plaintext.js'
+import * as dhive from "@hiveio/dhive";
+const client = new dhive.Client(["https://api.hive.blog"]);
 
 export class AuthService {
 
@@ -8,10 +10,10 @@ export class AuthService {
     try {
       // Create timestamp for proof
       const timestamp = new Date().toISOString();
-      
+
       // Login with Hive blockchain using Keychain
       const result = await aioha.login(Providers.Keychain, username, { msg: timestamp, keyType: KeyTypes.Posting });
-      
+
       if (!result.success) {
         throw new Error(result.error || 'Hive authentication failed');
       }
@@ -30,17 +32,17 @@ export class AuthService {
   }
 
   static async loginWithHiveAuth(aioha: Aioha, username: string): Promise<HiveAuthResult> {
-    
+
     try {
       // Create timestamp for proof
       const timestamp = new Date().toISOString();
-      
+
       // Login with Hive blockchain using HiveAuth
-      const result = await aioha.login(Providers.HiveAuth, username, { 
-        msg: timestamp, 
+      const result = await aioha.login(Providers.HiveAuth, username, {
+        msg: timestamp,
         keyType: KeyTypes.Posting
       });
-      
+
       if (!result.success) {
         throw new Error(result.error || 'Hive authentication failed');
       }
@@ -51,6 +53,85 @@ export class AuthService {
         publicKey: result.publicKey || '', // Handle optional publicKey
         username: username,
         proof: timestamp // Original timestamp as proof
+      };
+    } catch (error) {
+      console.error('Hive authentication error:', error);
+      throw new Error('Failed to authenticate with Hive blockchain');
+    }
+  }
+
+  static async loginWithPrivatePostingKey(aioha: Aioha, username: string, privatePostingKey: string): Promise<HiveAuthResult> {
+
+    try {
+      const privateKeyObj = dhive.PrivateKey.fromString(privatePostingKey);
+      const publicKey = privateKeyObj.createPublic().toString();
+
+      const account = await client.database.getAccounts([username]);
+      if (account.length === 0) {
+        throw new Error(`Account ${username} not found.`);
+      }
+
+      const postingKeys = account[0].posting.key_auths.map(
+        (item: any) => item[0]
+      );
+      if (!postingKeys.includes(publicKey)) {
+        throw new Error("Posting key mismatch");
+      }
+
+      const plaintextProvider = new PlaintextKeyProvider(privatePostingKey);
+      aioha.registerCustomProvider(plaintextProvider);
+      // Create timestamp for proof
+      const timestamp = new Date().toISOString();
+
+      const result = await aioha.login(Providers.Custom, username, {
+        msg: timestamp,
+        keyType: KeyTypes.Posting
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || 'Hive posting key based login failed');
+      }
+
+      return {
+        provider: 'privatePostingKey',
+        challenge: result.result, // Signature result from Hive authentication
+        publicKey: result.publicKey || '', // Handle optional publicKey
+        username: username,
+        proof: timestamp,
+        privatePostingKey: privatePostingKey
+      };
+    } catch (error) {
+      console.error('Hive authentication error:', error);
+      throw new Error('Failed to authenticate with Hive blockchain');
+    }
+  }
+
+  static async switchUserWithPrivatePostingKey(aioha: Aioha, username: string, privatePostingKey: string): Promise<HiveAuthResult> {
+
+    try {
+      const plaintextProvider = new PlaintextKeyProvider(privatePostingKey);
+      aioha.registerCustomProvider(plaintextProvider);
+      // Create timestamp for proof
+      const timestamp = new Date().toISOString();
+
+      console.log('Switching to user', username);
+
+      const result = await aioha.login(Providers.Custom, username, {
+        msg: timestamp,
+        keyType: KeyTypes.Posting
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || 'Hive posting key based login failed');
+      }
+
+      return {
+        provider: 'privatePostingKey',
+        challenge: result.result, // Signature result from Hive authentication
+        publicKey: result.publicKey || '', // Handle optional publicKey
+        username: username,
+        proof: timestamp,
+        privatePostingKey: privatePostingKey
       };
     } catch (error) {
       console.error('Hive authentication error:', error);

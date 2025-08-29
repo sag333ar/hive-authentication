@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import type { LoggedInUser, SwitchUserModalProps } from '../types/auth';
 import { AuthService } from '../services/authService';
 import { useAioha } from '@aioha/react-provider';
+import { PlaintextKeyProvider } from '@aioha/aioha/build/providers/custom/plaintext';
 
 export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({ 
   isOpen, 
@@ -15,8 +16,11 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
   const [showAddAccount, setShowAddAccount] = useState(false);
   const { currentUser, loggedInUsers, setCurrentUser, removeLoggedInUser, clearAllUsers } = useAuthStore();
   
-  const handleSwitchUser = (user: LoggedInUser) => {
+  const handleSwitchUser = async (user: LoggedInUser) => {
     setCurrentUser(user);
+    if (user.privatePostingKey) {
+      await AuthService.switchUserWithPrivatePostingKey(aioha, user.username, user.privatePostingKey);
+    }
     AuthService.switchUser(aioha, user.username);
     onClose();
   };
