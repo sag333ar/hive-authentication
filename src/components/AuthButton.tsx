@@ -45,7 +45,7 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
     <AiohaProvider aioha={aioha}>
       <button
         onClick={handleButtonClick}
-        className="btn btn-primary"
+        // className="btn btn-primary"
         title={currentUser ? `Logged in as ${currentUser.username}` : 'Click to login'}
       >
         {currentUser ? (

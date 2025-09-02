@@ -1,64 +1,57 @@
-import { useEffect } from 'react';
-import { AuthButton } from './components/AuthButton';
-import { useAuthStore } from './store/authStore';
-import type { HiveAuthResult, LoggedInUser } from './types/auth';
-import './App.css';
+import { useEffect, useState } from "react";
+import { AuthButton } from "./components/AuthButton";
+import { useAuthStore } from "./store/authStore";
+import type { HiveAuthResult, LoggedInUser } from "./types/auth";
+
+import "./App.css";
+import { ApiVideoFeedType, type VideoFeedItem } from "./types/video";
+import VideoFeed from "./components/video/VideoFeed";
 
 function App() {
   const { currentUser, loggedInUsers } = useAuthStore();
+  const [selectedTab, setSelectedTab] = useState<ApiVideoFeedType>(ApiVideoFeedType.HOME);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Example of how to subscribe to store changes using Zustand
+
   useEffect(() => {
     let previousUser = currentUser;
-    
-    // Subscribe to store changes
+
     const unsubscribe = useAuthStore.subscribe((state) => {
       const currentUser = state.currentUser;
-      
-      // Detect login/logout/user switch
+
       if (currentUser && !previousUser) {
-        console.log('User logged in:', currentUser);
+        console.log("User logged in:", currentUser);
       } else if (!currentUser && previousUser) {
-        console.log('User logged out:', previousUser);
-      } else if (currentUser && previousUser && currentUser.username !== previousUser.username) {
-        console.log('User switched to:', currentUser);
+        console.log("User logged out:", previousUser);
+      } else if (
+        currentUser &&
+        previousUser &&
+        currentUser.username !== previousUser.username
+      ) {
+        console.log("User switched to:", currentUser);
       }
-      
+
       previousUser = currentUser;
     });
 
     return unsubscribe;
   }, [currentUser]);
 
-  // Sample API implementation - this is what developers should implement
   const handleAuthenticate = async (hiveResult: HiveAuthResult): Promise<string> => {
-    console.log('Hive authentication result:', hiveResult);
-    
+    console.log("Hive authentication result:", hiveResult);
+
     try {
-      // Make API call to your server
-      const response = await fetch('https://beta-api.distriator.com/login', {
-        method: 'POST',
+      const response = await fetch("https://beta-api.distriator.com/login", {
+        method: "POST",
         headers: {
-          'Accept': '*/*',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Connection': 'keep-alive',
-          'Content-Type': 'application/json',
-          'Origin': window.location.origin,
-          'Referer': window.location.href,
-          'Sec-Fetch-Dest': 'empty',
-          'Sec-Fetch-Mode': 'cors',
-          'Sec-Fetch-Site': 'cross-site',
-          'User-Agent': navigator.userAgent,
-          'sec-ch-ua': '"Not;A=Brand";v="99", "Google Chrome";v="139", "Chromium";v="139"',
-          'sec-ch-ua-mobile': '?0',
-          'sec-ch-ua-platform': '"macOS"'
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           challenge: hiveResult.challenge,
           username: hiveResult.username,
           pubkey: hiveResult.publicKey,
-          proof: hiveResult.proof
-        })
+          proof: hiveResult.proof,
+        }),
       });
 
       if (!response.ok) {
@@ -66,19 +59,95 @@ function App() {
       }
 
       const data = await response.json();
-      console.log('Server response:', data);
-      
-      // Return your server response as JSON string
+      console.log("Server response:", data);
+
       return JSON.stringify(data);
     } catch (error) {
-      console.error('Authentication error:', error);
+      console.error("Authentication error:", error);
       throw error;
+    }
+  };
+
+  const handleVideoClick = (video: VideoFeedItem) => {
+    console.log("Video clicked:", video.permlink, video.author);
+  };
+
+  const handleAuthorClick = (author: string) => {
+    console.log("Author clicked:", author);
+  };
+
+  const renderFeed = () => {
+    switch (selectedTab) {
+      case ApiVideoFeedType.USER:
+        return (
+          currentUser && (
+            <VideoFeed
+              feedType={ApiVideoFeedType.USER}
+              username={currentUser.username}
+              onVideoClick={handleVideoClick}
+              onAuthorClick={handleAuthorClick}
+            />
+          )
+        );
+      case ApiVideoFeedType.HOME:
+        return (
+          <VideoFeed feedType={ApiVideoFeedType.HOME} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
+        );
+      case ApiVideoFeedType.TRENDING:
+        return (
+          <VideoFeed feedType={ApiVideoFeedType.TRENDING} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
+        );
+      case ApiVideoFeedType.NEW_VIDEOS:
+        return (
+          <VideoFeed feedType={ApiVideoFeedType.NEW_VIDEOS} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
+        );
+      case ApiVideoFeedType.FIRST_UPLOADS:
+        return (
+          <VideoFeed feedType={ApiVideoFeedType.FIRST_UPLOADS} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
+        );
+      case ApiVideoFeedType.COMMUNITY:
+        return (
+          <VideoFeed feedType={ApiVideoFeedType.COMMUNITY} communityId={'hive-163772'} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
+        );
+      case ApiVideoFeedType.RELATED:
+        return (
+          <VideoFeed feedType={ApiVideoFeedType.RELATED} onVideoClick={handleVideoClick} username={'viviana.fitness'} onAuthorClick={handleAuthorClick} />
+        );
+      case ApiVideoFeedType.TAG_FEED:
+        return (
+          <VideoFeed feedType={ApiVideoFeedType.TAG_FEED} tag={'neoxian'} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
+        );
+      case ApiVideoFeedType.SEARCH:
+        return (
+          <div className="space-y-4">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search videos..."
+              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            {searchQuery.length >= 4 ? (
+              <VideoFeed
+                feedType={ApiVideoFeedType.SEARCH}
+                tag={searchQuery}
+                onVideoClick={handleVideoClick}
+                onAuthorClick={handleAuthorClick}
+              />
+            ) : (
+              <p className="text-gray-500">Type at least 4 characters to search...</p>
+            )}
+          </div>
+        );
+      default:
+        return null;
     }
   };
 
   return (
     <div className="min-h-screen bg-base-200 p-8">
       <div className="max-w-4xl mx-auto">
+        {/* Auth Section */}
         <div className="card bg-base-100 shadow-xl mb-8">
           <div className="card-body">
             <h2 className="card-title text-2xl">Hive Authentication Demo</h2>
@@ -86,16 +155,16 @@ function App() {
               This is a demo of the Hive Authentication package with a working API integration.
             </p>
             <div className="card-actions justify-center mt-4">
-              <AuthButton 
+              <AuthButton
                 onAuthenticate={handleAuthenticate}
                 hiveauth={{
-                  name: 'Hive Authentication Demo',
-                  description: 'A demo app for testing Hive authentication'
+                  name: "Hive Authentication Demo",
+                  description: "A demo app for testing Hive authentication",
                 }}
                 hivesigner={{
-                  app: 'hive-auth-demo.app',
-                  callbackURL: window.location.origin + '/hivesigner.html',
-                  scope: ['login', 'vote']
+                  app: "hive-auth-demo.app",
+                  callbackURL: window.location.origin + "/hivesigner.html",
+                  scope: ["login", "vote"],
                 }}
               />
             </div>
@@ -108,16 +177,24 @@ function App() {
             <div className="card-body">
               <h3 className="card-title text-green-800">Currently Logged In</h3>
               <div className="space-y-2 text-green-700">
-                <p><strong>Username:</strong> {currentUser.username}</p>
-                <p><strong>Provider:</strong> {currentUser.provider}</p>
-                <p><strong>Public Key:</strong> {currentUser.publicKey.substring(0, 20)}...</p>
-                <p><strong>Server Response:</strong> {currentUser.serverResponse.substring(0, 20)}...</p>
+                <p>
+                  <strong>Username:</strong> {currentUser.username}
+                </p>
+                <p>
+                  <strong>Provider:</strong> {currentUser.provider}
+                </p>
+                <p>
+                  <strong>Public Key:</strong> {currentUser.publicKey.substring(0, 20)}...
+                </p>
+                <p>
+                  <strong>Server Response:</strong> {currentUser.serverResponse.substring(0, 20)}...
+                </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* All Users List */}
+        {/* Logged In Users */}
         {loggedInUsers.length > 0 && (
           <div className="card bg-blue-50 border border-blue-200 mb-6">
             <div className="card-body">
@@ -140,45 +217,28 @@ function App() {
           </div>
         )}
 
-        {/* How It Works */}
-        <div className="card bg-base-100 shadow-xl">
-          <div className="card-body">
-            <h3 className="card-title">How It Works</h3>
-            <div className="text-sm text-base-content/70 space-y-2">
-              <ol className="list-decimal list-inside space-y-1">
-                <li>Click the Login button above</li>
-                <li>Enter a Hive username</li>
-                <li>Package authenticates with Hive blockchain</li>
-                <li>Package calls your callback with Hive result</li>
-                <li>Your callback makes API call to your server</li>
-                <li>If successful, user is logged in. If failed, user is logged out</li>
-              </ol>
-              
-              <div className="mt-4 p-4 bg-base-200 rounded-lg">
-                <h4 className="font-semibold mb-2">Sample API Implementation:</h4>
-                <p className="text-xs font-mono">
-                  The callback in this demo makes a POST request to{' '}
-                  <code className="bg-base-300 px-1 rounded">https://beta-api.distriator.com/login</code>
-                </p>
-                <p className="text-xs mt-1">
-                  Check the browser console to see the full request/response flow.
-                </p>
-              </div>
-
-              <div className="mt-4 p-4 bg-base-200 rounded-lg">
-                <h4 className="font-semibold mb-2">State Management:</h4>
-                <p className="text-xs">
-                  Use <code className="bg-base-300 px-1 rounded">useAuthStore()</code> to access{' '}
-                  <code className="bg-base-300 px-1 rounded">currentUser</code> and{' '}
-                  <code className="bg-base-300 px-1 rounded">loggedInUsers</code>.
-                </p>
-                <p className="text-xs mt-1">
-                  Subscribe to changes using <code className="bg-base-300 px-1 rounded">useAuthStore.subscribe()</code>.
-                </p>
-              </div>
-            </div>
-          </div>
+        {/* Feed Tabs */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {Object.values(ApiVideoFeedType).map((feed) => (
+            <button
+              key={feed}
+              onClick={() => setSelectedTab(feed)}
+              className={`px-4 py-2 rounded-lg ${selectedTab === feed
+                ? "bg-primary text-white"
+                : "bg-gray-200 hover:bg-gray-300 text-gray-500"
+                }`}
+            >
+              {feed.replace(/_/g, " ")}
+            </button>
+          ))}
         </div>
+
+        {/* Render Feeds */}
+        <div>
+          <h3 className="text-4xl">Video Feeds</h3>
+          {renderFeed()}
+        </div>
+
       </div>
     </div>
   );
