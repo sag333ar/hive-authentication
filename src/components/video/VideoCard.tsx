@@ -81,10 +81,12 @@ const VideoCard = ({
       >
         <img
           src={
-            formatThumbnailUrl(video.thumbnail) ||
-            `https://picsum.photos/400/225?random=${video.permlink}`
+            formatThumbnailUrl(video.thumbnail)
           }
           alt={video.title}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = `https://images.hive.blog/u/${video.author}/avatar`;
+          }}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
 
@@ -133,7 +135,7 @@ const VideoCard = ({
               alt={video.author}
               className="w-8 h-8 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${video.author}&background=random`;
+                (e.target as HTMLImageElement).src = `https://images.hive.blog/u/null/avatar`;
               }}
             />
             <span className="font-medium text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
