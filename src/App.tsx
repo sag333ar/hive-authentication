@@ -232,14 +232,13 @@ function App() {
             </button>
           ))}
         </div>
-
+        
+      </div>
         {/* Render Feeds */}
         <div>
           <h3 className="text-4xl">Video Feeds</h3>
           {renderFeed()}
         </div>
-
-      </div>
     </div>
   );
 }
