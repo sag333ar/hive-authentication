@@ -45,17 +45,26 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
     }
   }, [hiveAuthPayload]);
 
+
   useEffect(() => {
-    const checkKeychain = async () => {
-      const isEnabled = await aioha.isProviderEnabled(Providers.Keychain);
+    const check = async () => {
+      await new Promise((res) => setTimeout(res, 500));
+      const isEnabled = aioha.isProviderEnabled(Providers.Keychain);
       setIsKeychainEnabled(isEnabled);
+      console.log('is it keychain enabled?', isEnabled);
       if (isEnabled) {
         setLoginMethod('keychain');
       } else {
         setLoginMethod('hiveauth');
       }
     };
-    checkKeychain();
+
+    if (document.readyState === "complete") {
+      check();
+    } else {
+      window.addEventListener("load", check);
+      return () => window.removeEventListener("load", check);
+    }
   }, []);
 
   // Handle HiveAuth request and generate QR code

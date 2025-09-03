@@ -80,6 +80,7 @@ function App() {
         <h1>My App</h1>
           <AuthButton 
             onAuthenticate={handleAuthenticate}
+            aioha={aioha}
           />
           
           {currentUser && (

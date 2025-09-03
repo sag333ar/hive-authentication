@@ -106,6 +106,7 @@ function App() {
               <div className="card-actions justify-center mt-4">
                 <AuthButton
                   onAuthenticate={handleAuthenticate}
+                  aioha={aioha}
                 />
               </div>
             </div>
