@@ -37,13 +37,8 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
   
   return (
     <>
-      <button
-        onClick={handleButtonClick}
-        className="btn btn-primary"
-        title={currentUser ? `Logged in as ${currentUser.username}` : 'Click to login'}
-      >
         {currentUser ? (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-center gap-1" onClick={handleButtonClick}>
             <div className="avatar">
               <div className="w-6 h-6 rounded-full">
                 <img 
@@ -55,12 +50,13 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
                 />
               </div>
             </div>
-            <span className="hidden sm:inline">{currentUser.username}</span>
+            <div className="hidden sm:inline">{currentUser.username}</div>
           </div>
         ) : (
-          'Login'
+          <button className="btn btn-primary" onClick={handleButtonClick}>
+            Login
+          </button>
         )}
-      </button>
       
       <LoginDialog
         isOpen={isLoginDialogOpen}
