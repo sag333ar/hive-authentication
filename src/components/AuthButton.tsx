@@ -3,13 +3,12 @@ import { useAuthStore } from '../store/authStore';
 import { LoginDialog } from './LoginDialog';
 import { SwitchUserModal } from './SwitchUserModal';
 import type { AuthButtonProps } from '../types/auth';
-import { useAioha } from '@aioha/react-provider'
-
 
 export const AuthButton: React.FC<AuthButtonProps> = ({ 
-  onAuthenticate
+  onAuthenticate,
+  aioha,
 }) => {
-  const { aioha } = useAioha();
+  // const { aioha } = useAioha();
   const { setHiveAuthPayload } = useAuthStore();
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const [isSwitchUserModalOpen, setIsSwitchUserModalOpen] = useState(false);
@@ -67,12 +66,14 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
         isOpen={isLoginDialogOpen}
         onClose={() => setIsLoginDialogOpen(false)}
         onAuthenticate={onAuthenticate}
+        aioha={aioha}
       />
       
       <SwitchUserModal
         isOpen={isSwitchUserModalOpen}
         onClose={() => setIsSwitchUserModalOpen(false)}
         onAuthenticate={onAuthenticate}
+        aioha={aioha}
       />
       </>
   );

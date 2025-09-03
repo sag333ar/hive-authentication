@@ -3,18 +3,16 @@ import { LoginDialog } from './LoginDialog';
 import { useAuthStore } from '../store/authStore';
 import type { LoggedInUser, SwitchUserModalProps } from '../types/auth';
 import { AuthService } from '../services/authService';
-import { useAioha } from '@aioha/react-provider';
 import KeychainIcon from '../assets/keychain.svg'
 import HiveAuthIcon from '../assets/hiveauth-light.svg'
 import PrivateKeyIcon from '../assets/privatekey.svg'
 
-
 export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({ 
   isOpen, 
   onClose, 
-  onAuthenticate
-}) => {
-  const { aioha } = useAioha()
+  onAuthenticate,
+  aioha,
+}) => { 
   const [showAddAccount, setShowAddAccount] = useState(false);
   const { currentUser, loggedInUsers, setCurrentUser, removeLoggedInUser, clearAllUsers } = useAuthStore();
   
@@ -77,6 +75,7 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
         showBackButton={true}
         onBack={handleBackFromLogin}
         onAuthenticate={onAuthenticate}
+        aioha={aioha}
       />
     );
   }

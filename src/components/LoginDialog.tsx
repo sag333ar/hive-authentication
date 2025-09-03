@@ -3,7 +3,6 @@ import { useAuthStore } from '../store/authStore';
 import { AuthService } from '../services/authService';
 import type { LoginDialogProps } from '../types/auth';
 import QRCode from 'qrcode';
-import { useAioha } from '@aioha/react-provider'
 import { Providers } from '@aioha/aioha';
 import KeychainIcon from '../assets/keychain.svg'
 import HiveAuthIcon from '../assets/hiveauth-light.svg'
@@ -15,8 +14,8 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
   showBackButton = false,
   onBack,
   onAuthenticate,
+  aioha,
 }) => {
-  const { aioha } = useAioha()
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

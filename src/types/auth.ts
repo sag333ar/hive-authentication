@@ -1,3 +1,5 @@
+import type { Aioha } from "@aioha/aioha";
+
 export interface HiveAuthResult {
   provider: string;
   challenge: string;  // This will be a hash from the Hive authentication
@@ -50,6 +52,7 @@ export interface SwitchUserModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAuthenticate?: (hiveResult: HiveAuthResult) => Promise<string>;
+  aioha: Aioha;
 }
 
 export interface LoginDialogProps {
@@ -58,9 +61,11 @@ export interface LoginDialogProps {
   showBackButton?: boolean;
   onBack?: () => void;
   onAuthenticate?: (hiveResult: HiveAuthResult) => Promise<string>;
+  aioha: Aioha;
 }
 
 export interface AuthButtonProps {
   onAuthenticate: (hiveResult: HiveAuthResult) => Promise<string>;
+  aioha: Aioha;
 }
 
