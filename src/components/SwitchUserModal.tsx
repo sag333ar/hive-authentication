@@ -12,6 +12,7 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
   onClose, 
   onAuthenticate,
   aioha,
+    shouldShowSwitchUser = true,
 }) => { 
   const [showAddAccount, setShowAddAccount] = useState(false);
   const { currentUser, loggedInUsers, setCurrentUser, removeLoggedInUser, clearAllUsers } = useAuthStore();
@@ -149,18 +150,22 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
         
         {/* Bottom Actions */}
         <div className="modal-action flex-col gap-2">
-          <button
-            className="btn btn-primary w-full"
-            onClick={handleAddAccount}
-          >
-            Add Account
-          </button>
-          
+          {
+            shouldShowSwitchUser &&
+            <button
+              className="btn btn-primary w-full"
+              onClick={handleAddAccount}
+            >
+              Add Account
+            </button>
+          }
+
+
           <button
             className="btn btn-outline btn-error w-full"
             onClick={handleLogoutAll}
           >
-            Logout All
+            {shouldShowSwitchUser ? "Logout All" : "Logout"}
           </button>
         </div>
       </div>

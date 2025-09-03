@@ -53,6 +53,7 @@ export interface SwitchUserModalProps {
   onClose: () => void;
   onAuthenticate?: (hiveResult: HiveAuthResult) => Promise<string>;
   aioha: Aioha;
+  shouldShowSwitchUser?: boolean;
 }
 
 export interface LoginDialogProps {
@@ -67,5 +68,6 @@ export interface LoginDialogProps {
 export interface AuthButtonProps {
   onAuthenticate: (hiveResult: HiveAuthResult) => Promise<string>;
   aioha: Aioha;
+  shouldShowSwitchUser?: boolean;
 }
 

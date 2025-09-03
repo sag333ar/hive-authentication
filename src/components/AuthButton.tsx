@@ -7,6 +7,7 @@ import type { AuthButtonProps } from '../types/auth';
 export const AuthButton: React.FC<AuthButtonProps> = ({ 
   onAuthenticate,
   aioha,
+  shouldShowSwitchUser = true,
 }) => {
   // const { aioha } = useAioha();
   const { setHiveAuthPayload } = useAuthStore();
@@ -67,6 +68,7 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
       
       <SwitchUserModal
         isOpen={isSwitchUserModalOpen}
+        shouldShowSwitchUser={shouldShowSwitchUser ?? true}
         onClose={() => setIsSwitchUserModalOpen(false)}
         onAuthenticate={onAuthenticate}
         aioha={aioha}

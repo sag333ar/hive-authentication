@@ -81,6 +81,7 @@ function App() {
           <AuthButton 
             onAuthenticate={handleAuthenticate}
             aioha={aioha}
+            shouldShowSwitchUser = {true} // Optional true
           />
           
           {currentUser && (
