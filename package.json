@@ -1,6 +1,6 @@
 {
   "name": "hive-authentication",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -28,7 +28,7 @@
     "@aioha/react-provider": "^1.7.0",
     "@tailwindcss/vite": "^4.1.12",
     "crypto-js": "^4.2.0",
-    "daisyui": "^5.0.50",
+    "daisyui": "^5.1.6",
     "qrcode": "^1.5.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
