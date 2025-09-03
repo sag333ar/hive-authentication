@@ -195,7 +195,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
 
   return (
     <div className="modal modal-open">
-      <div className="modal-box absolute top-1/3">
+      <div className="modal-box absolute">
         <div className="flex items-center justify-between mb-4">
           {showBackButton && (
             <button
@@ -326,7 +326,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
                 Choose your login method:
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <div className="flex flex-row flex-wrap gap-4 justify-center items-center">
                 {/* Radio buttons for login methods */}
                 <div className="form-control" style={{ display: isKeychainEnabled ? 'flex' : 'none' }}>
                   <label className="label cursor-pointer border border-base-300 rounded-lg px-4 py-2 hover:bg-base-100 transition-colors">
