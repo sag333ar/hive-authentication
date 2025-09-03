@@ -12,8 +12,7 @@ import PrivateKeyIcon from '../assets/privatekey.svg'
 export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({ 
   isOpen, 
   onClose, 
-  onAuthenticate,
-  config
+  onAuthenticate
 }) => {
   const { aioha } = useAioha()
   const [showAddAccount, setShowAddAccount] = useState(false);
@@ -78,7 +77,6 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
         showBackButton={true}
         onBack={handleBackFromLogin}
         onAuthenticate={onAuthenticate}
-        config={config}
       />
     );
   }

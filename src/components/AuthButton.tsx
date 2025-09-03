@@ -3,16 +3,13 @@ import { useAuthStore } from '../store/authStore';
 import { LoginDialog } from './LoginDialog';
 import { SwitchUserModal } from './SwitchUserModal';
 import type { AuthButtonProps } from '../types/auth';
-import { initAioha } from '@aioha/aioha';
-import { AiohaProvider } from '@aioha/react-provider'
+import { useAioha } from '@aioha/react-provider'
 
-const aioha = initAioha()
 
 export const AuthButton: React.FC<AuthButtonProps> = ({ 
-  onAuthenticate, 
-  hiveauth, 
-  hivesigner
+  onAuthenticate
 }) => {
+  const { aioha } = useAioha();
   const { setHiveAuthPayload } = useAuthStore();
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const [isSwitchUserModalOpen, setIsSwitchUserModalOpen] = useState(false);
@@ -24,8 +21,6 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
     });
   }, [aioha]);
   
-  // Create the config object
-  const config = { hiveauth, hivesigner };
   
   const handleButtonClick = () => {
     if (currentUser) {
@@ -42,7 +37,7 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
   };
   
   return (
-    <AiohaProvider aioha={aioha}>
+    <>
       <button
         onClick={handleButtonClick}
         className="btn btn-primary"
@@ -72,15 +67,13 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
         isOpen={isLoginDialogOpen}
         onClose={() => setIsLoginDialogOpen(false)}
         onAuthenticate={onAuthenticate}
-        config={config}
       />
       
       <SwitchUserModal
         isOpen={isSwitchUserModalOpen}
         onClose={() => setIsSwitchUserModalOpen(false)}
         onAuthenticate={onAuthenticate}
-        config={config}
       />
-    </AiohaProvider>
+      </>
   );
 };

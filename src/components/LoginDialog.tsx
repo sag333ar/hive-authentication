@@ -15,7 +15,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
   showBackButton = false,
   onBack,
   onAuthenticate,
-  config
 }) => {
   const { aioha } = useAioha()
   const [username, setUsername] = useState('');
@@ -138,10 +137,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
     }
 
     try {
-      // Check if HiveAuth is selected but not configured
-      if (loginMethod === 'hiveauth' && !config?.hiveauth) {
-        throw new Error('HiveAuth not configured. Please provide hiveauth configuration.');
-      }
 
       let hiveResult;
 
@@ -169,7 +164,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
       await authenticateWithCallback(
         hiveResult,
         onAuthenticate,
-        config
       );
 
       onClose();
@@ -351,7 +345,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
                       className="radio radio-primary"
                       checked={loginMethod === 'hiveauth'}
                       onChange={() => setLoginMethod('hiveauth')}
-                      disabled={isLoading || !config?.hiveauth}
+                      disabled={isLoading}
                     />
                     <span className="label-text">
                       <img src={HiveAuthIcon} alt="HiveAuth" className='w-10 h-10' />

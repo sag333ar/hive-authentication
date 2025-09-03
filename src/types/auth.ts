@@ -42,8 +42,7 @@ export interface AuthStore {
   // Authentication
   authenticateWithCallback: (
     hiveResult: HiveAuthResult,
-    callback: (hiveResult: HiveAuthResult) => Promise<string>,
-    config?: AiohaConfig
+    callback: (hiveResult: HiveAuthResult) => Promise<string>
   ) => Promise<void>;
 }
 
@@ -51,7 +50,6 @@ export interface SwitchUserModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAuthenticate?: (hiveResult: HiveAuthResult) => Promise<string>;
-  config?: AiohaConfig;
 }
 
 export interface LoginDialogProps {
@@ -60,35 +58,9 @@ export interface LoginDialogProps {
   showBackButton?: boolean;
   onBack?: () => void;
   onAuthenticate?: (hiveResult: HiveAuthResult) => Promise<string>;
-  config?: AiohaConfig;
 }
 
 export interface AuthButtonProps {
   onAuthenticate: (hiveResult: HiveAuthResult) => Promise<string>;
-  // HiveAuth configuration (required)
-  hiveauth: {
-    name: string;
-    description?: string;
-    icon?: string;
-  };
-  // HiveSigner configuration (required)
-  hivesigner: {
-    app: string;
-    callbackURL: string;
-    scope: string[];
-  };
-}
-
-export interface AiohaConfig {
-  hiveauth: {
-    name: string;
-    description?: string;
-    icon?: string;
-  };
-  hivesigner: {
-    app: string;
-    callbackURL: string;
-    scope: string[];
-  };
 }
 
