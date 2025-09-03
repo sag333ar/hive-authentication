@@ -80,15 +80,6 @@ function App() {
         <h1>My App</h1>
           <AuthButton 
             onAuthenticate={handleAuthenticate}
-            hiveauth={{
-              name: 'My Hive App',
-              description: 'A Hive blockchain application'
-            }}
-            hivesigner={{
-              app: 'myapp.app',
-              callbackURL: window.location.origin + '/hivesigner.html',
-              scope: ['login', 'vote']
-            }}
           />
           
           {currentUser && (
