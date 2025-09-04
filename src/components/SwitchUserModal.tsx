@@ -91,7 +91,7 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
           ✕
         </button>
         
-        <h3 className="font-bold text-lg mb-4">Switch User</h3>
+        <h3 className="font-bold text-lg mb-4">{shouldShowSwitchUser ? "Switch User" : "Logged in User"}</h3>
         
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {loggedInUsers.map((user) => (
