@@ -39,9 +39,9 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
   return (
     <>
         {currentUser ? (
-          <div className="flex flex-col items-center gap-1" onClick={handleButtonClick}>
+          <div className="flex flex-col items-center" onClick={handleButtonClick}>
             <div className="avatar">
-              <div className="w-6 h-6 rounded-full">
+              <div className="w-7 h-7 rounded-full">
                 <img 
                   src={getAvatarUrl(currentUser.username)} 
                   alt={`${currentUser.username} avatar`}
@@ -51,7 +51,7 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
                 />
               </div>
             </div>
-            <div className="hidden sm:inline">{currentUser.username}</div>
+            <div className="text-black/80 dark:text-gray-300 text-sm">{currentUser.username}</div>
           </div>
         ) : (
           <button className="btn btn-primary" onClick={handleButtonClick}>
