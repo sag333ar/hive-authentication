@@ -3,7 +3,6 @@ import { useAuthStore } from '../store/authStore';
 import { AuthService } from '../services/authService';
 import type { LoginDialogProps } from '../types/auth';
 import QRCode from 'qrcode';
-import { useAioha } from '@aioha/react-provider'
 import { Providers } from '@aioha/aioha';
 import KeychainIcon from '../assets/keychain.svg'
 import HiveAuthIcon from '../assets/hiveauth-light.svg'
@@ -15,9 +14,8 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
   showBackButton = false,
   onBack,
   onAuthenticate,
-  config
+  aioha,
 }) => {
-  const { aioha } = useAioha()
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -48,16 +46,24 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
   }, [hiveAuthPayload]);
 
   useEffect(() => {
-    const checkKeychain = async () => {
-      const isEnabled = await aioha.isProviderEnabled(Providers.Keychain);
+    const check = async () => {
+      await new Promise((res) => setTimeout(res, 500));
+      const isEnabled = aioha.isProviderEnabled(Providers.Keychain);
       setIsKeychainEnabled(isEnabled);
+      console.log('is it keychain enabled?', isEnabled);
       if (isEnabled) {
         setLoginMethod('keychain');
       } else {
         setLoginMethod('hiveauth');
       }
     };
-    checkKeychain();
+
+    if (document.readyState === "complete") {
+      check();
+    } else {
+      window.addEventListener("load", check);
+      return () => window.removeEventListener("load", check);
+    }
   }, []);
 
   // Handle HiveAuth request and generate QR code
@@ -138,10 +144,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
     }
 
     try {
-      // Check if HiveAuth is selected but not configured
-      if (loginMethod === 'hiveauth' && !config?.hiveauth) {
-        throw new Error('HiveAuth not configured. Please provide hiveauth configuration.');
-      }
 
       let hiveResult;
 
@@ -169,7 +171,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
       await authenticateWithCallback(
         hiveResult,
         onAuthenticate,
-        config
       );
 
       onClose();
@@ -193,7 +194,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
 
   return (
     <div className="modal modal-open">
-      <div className="modal-box absolute top-1/3">
+      <div className="modal-box absolute">
         <div className="flex items-center justify-between mb-4">
           {showBackButton && (
             <button
@@ -320,18 +321,24 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
             )}
 
             <div className="mt-4">
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-gray-600 mb-3 text-center">
                 Choose your login method:
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                {/* Radio buttons for login methods */}
+              <div className="flex flex-row flex-wrap gap-4 justify-center items-center">
+                {/* Login method options */}
                 <div className="form-control" style={{ display: isKeychainEnabled ? 'flex' : 'none' }}>
-                  <label className="label cursor-pointer border border-base-300 rounded-lg px-4 py-2 hover:bg-base-100 transition-colors">
+                  <label 
+                    className={`label cursor-pointer rounded-lg px-4 py-2 transition-colors ${
+                      loginMethod === 'keychain' 
+                        ? 'bg-primary text-primary-content' 
+                        : 'border border-base-300 hover:bg-base-100'
+                    }`}
+                  >
                     <input
                       type="radio"
                       name="loginMethod"
-                      className="radio radio-primary"
+                      className="hidden"
                       checked={loginMethod === 'keychain'}
                       onChange={() => setLoginMethod('keychain')}
                       disabled={isLoading}
@@ -339,33 +346,43 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
                     <span className="label-text">
                       <img src={KeychainIcon} alt="Keychain" className='w-10 h-10' />
                     </span>
-                    <span className="label-text">Keychain</span>
                   </label>
                 </div>
 
                 <div className="form-control">
-                  <label className="label cursor-pointer border border-base-300 rounded-lg px-4 py-2 hover:bg-base-100 transition-colors">
+                  <label 
+                    className={`label cursor-pointer rounded-lg px-4 py-2 transition-colors ${
+                      loginMethod === 'hiveauth' 
+                        ? 'bg-primary text-primary-content' 
+                        : 'border border-base-300 hover:bg-base-100'
+                    }`}
+                  >
                     <input
                       type="radio"
                       name="loginMethod"
-                      className="radio radio-primary"
+                      className="hidden"
                       checked={loginMethod === 'hiveauth'}
                       onChange={() => setLoginMethod('hiveauth')}
-                      disabled={isLoading || !config?.hiveauth}
+                      disabled={isLoading}
                     />
                     <span className="label-text">
                       <img src={HiveAuthIcon} alt="HiveAuth" className='w-10 h-10' />
                     </span>
-                    <span className="label-text">HiveAuth</span>
                   </label>
                 </div>
 
                 <div className="form-control">
-                  <label className="label cursor-pointer border border-base-300 rounded-lg px-4 py-2 hover:bg-base-100 transition-colors">
+                  <label 
+                    className={`label cursor-pointer rounded-lg px-4 py-2 transition-colors ${
+                      loginMethod === 'privateKey' 
+                        ? 'bg-primary text-primary-content' 
+                        : 'border border-base-300 hover:bg-base-100'
+                    }`}
+                  >
                     <input
                       type="radio"
                       name="loginMethod"
-                      className="radio radio-primary"
+                      className="hidden"
                       checked={loginMethod === 'privateKey'}
                       onChange={() => setLoginMethod('privateKey')}
                       disabled={isLoading}
@@ -373,7 +390,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
                     <span className="label-text">
                       <img src={PrivateKeyIcon} alt="Private Key" className='w-10 h-10' />
                     </span>
-                    <span className="label-text">PostingKey</span>
                   </label>
                 </div>
               </div>

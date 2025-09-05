@@ -3,19 +3,17 @@ import { LoginDialog } from './LoginDialog';
 import { useAuthStore } from '../store/authStore';
 import type { LoggedInUser, SwitchUserModalProps } from '../types/auth';
 import { AuthService } from '../services/authService';
-import { useAioha } from '@aioha/react-provider';
 import KeychainIcon from '../assets/keychain.svg'
 import HiveAuthIcon from '../assets/hiveauth-light.svg'
 import PrivateKeyIcon from '../assets/privatekey.svg'
-
 
 export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({ 
   isOpen, 
   onClose, 
   onAuthenticate,
-  config
-}) => {
-  const { aioha } = useAioha()
+  aioha,
+    shouldShowSwitchUser = true,
+}) => { 
   const [showAddAccount, setShowAddAccount] = useState(false);
   const { currentUser, loggedInUsers, setCurrentUser, removeLoggedInUser, clearAllUsers } = useAuthStore();
   
@@ -78,14 +76,14 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
         showBackButton={true}
         onBack={handleBackFromLogin}
         onAuthenticate={onAuthenticate}
-        config={config}
+        aioha={aioha}
       />
     );
   }
   
     return (
     <div className="modal modal-open">
-      <div className="modal-box absolute top-1/3">
+      <div className="modal-box absolute">
         <button
           className="btn btn-sm btn-circle btn-ghost bg-base-200 hover:bg-base-300 border border-base-300 absolute right-2 top-2"
           onClick={onClose}
@@ -93,7 +91,7 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
           ✕
         </button>
         
-        <h3 className="font-bold text-lg mb-4">Switch User</h3>
+        <h3 className="font-bold text-lg mb-4">{shouldShowSwitchUser ? "Switch User" : "Logged in User"}</h3>
         
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {loggedInUsers.map((user) => (
@@ -152,18 +150,22 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
         
         {/* Bottom Actions */}
         <div className="modal-action flex-col gap-2">
-          <button
-            className="btn btn-primary w-full"
-            onClick={handleAddAccount}
-          >
-            Add Account
-          </button>
-          
+          {
+            shouldShowSwitchUser &&
+            <button
+              className="btn btn-primary w-full"
+              onClick={handleAddAccount}
+            >
+              Add Account
+            </button>
+          }
+
+
           <button
             className="btn btn-outline btn-error w-full"
             onClick={handleLogoutAll}
           >
-            Logout All
+            {shouldShowSwitchUser ? "Logout All" : "Logout"}
           </button>
         </div>
       </div>
