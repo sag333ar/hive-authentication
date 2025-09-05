@@ -242,7 +242,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
             {/* QR Code */}
             <div className="flex justify-center mb-4">
               <div className="bg-white p-4 rounded-lg border shadow-lg">
-                <img src={qrCodeDataUrl} alt="HiveAuth QR Code" className="w-48 h-48" />
+                <img src={qrCodeDataUrl} alt="HiveAuth QR Code" className="w-48 h-48 cursor-pointer" onClick={() => window.open(hiveAuthPayload)} />
               </div>
             </div>
 
