@@ -3,16 +3,13 @@ import { useAuthStore } from '../store/authStore';
 import { LoginDialog } from './LoginDialog';
 import { SwitchUserModal } from './SwitchUserModal';
 import type { AuthButtonProps } from '../types/auth';
-import { initAioha } from '@aioha/aioha';
-import { AiohaProvider } from '@aioha/react-provider'
-
-const aioha = initAioha()
 
 export const AuthButton: React.FC<AuthButtonProps> = ({ 
-  onAuthenticate, 
-  hiveauth, 
-  hivesigner
+  onAuthenticate,
+  aioha,
+  shouldShowSwitchUser = true,
 }) => {
+  // const { aioha } = useAioha();
   const { setHiveAuthPayload } = useAuthStore();
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const [isSwitchUserModalOpen, setIsSwitchUserModalOpen] = useState(false);
@@ -24,8 +21,6 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
     });
   }, [aioha]);
   
-  // Create the config object
-  const config = { hiveauth, hivesigner };
   
   const handleButtonClick = () => {
     if (currentUser) {
@@ -42,16 +37,11 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
   };
   
   return (
-    <AiohaProvider aioha={aioha}>
-      <button
-        onClick={handleButtonClick}
-        className="btn btn-primary"
-        title={currentUser ? `Logged in as ${currentUser.username}` : 'Click to login'}
-      >
+    <>
         {currentUser ? (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-center" onClick={handleButtonClick}>
             <div className="avatar">
-              <div className="w-6 h-6 rounded-full">
+              <div className="w-7 h-7 rounded-full">
                 <img 
                   src={getAvatarUrl(currentUser.username)} 
                   alt={`${currentUser.username} avatar`}
@@ -61,26 +51,28 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
                 />
               </div>
             </div>
-            <span className="hidden sm:inline">{currentUser.username}</span>
+            <div className="text-black/80 dark:text-gray-300 text-sm">{currentUser.username}</div>
           </div>
         ) : (
-          'Login'
+          <button className="btn btn-primary" onClick={handleButtonClick}>
+            Login
+          </button>
         )}
-      </button>
       
       <LoginDialog
         isOpen={isLoginDialogOpen}
         onClose={() => setIsLoginDialogOpen(false)}
         onAuthenticate={onAuthenticate}
-        config={config}
+        aioha={aioha}
       />
       
       <SwitchUserModal
         isOpen={isSwitchUserModalOpen}
+        shouldShowSwitchUser={shouldShowSwitchUser ?? true}
         onClose={() => setIsSwitchUserModalOpen(false)}
         onAuthenticate={onAuthenticate}
-        config={config}
+        aioha={aioha}
       />
-    </AiohaProvider>
+      </>
   );
 };
