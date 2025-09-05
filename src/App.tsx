@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { AuthButton } from "./components/AuthButton";
 import { useAuthStore } from "./store/authStore";
 import type { HiveAuthResult, LoggedInUser } from "./types/auth";
-
-import "./App.css";
 import { ApiVideoFeedType, type VideoFeedItem } from "./types/video";
 import VideoFeed from "./components/video/VideoFeed";
 import { initAioha } from '@aioha/aioha'
