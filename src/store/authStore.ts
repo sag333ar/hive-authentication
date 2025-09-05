@@ -117,6 +117,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       localStorage.removeItem('aiohaUsername');  // clearing all aioha login user
       localStorage.removeItem('aiohaProvider');
       localStorage.removeItem('aiohaPubKey');
+      localStorage.removeItem('aiohaOtherLogins');
       window.location.reload();
       set({ currentUser: null, loggedInUsers: [] });
     },
