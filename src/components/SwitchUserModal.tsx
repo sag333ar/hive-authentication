@@ -30,10 +30,25 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
     removeLoggedInUser(username);
     AuthService.removeUser(aioha, username);
   };
-  
-  const handleLogoutAll = () => {
-    clearAllUsers();
-    onClose();
+
+  const handleLogoutAll = async () => {
+    try {
+      aioha.logout();
+      // Get all other logged in users
+      const otherLogins = aioha.getOtherLogins();
+      // Logout each user one by one
+      for (const user of Object.keys(otherLogins)) {
+        AuthService.removeUser(aioha, user);
+      }
+
+      // Clear app state / storage
+      clearAllUsers();
+
+      // Close modal or drawer
+      onClose();
+    } catch (error) {
+      console.error("Error logging out all users:", error);
+    }
   };
   
   const handleAddAccount = () => {

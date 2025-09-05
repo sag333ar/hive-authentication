@@ -176,7 +176,6 @@ function App() {
                 <AuthButton
                   onAuthenticate={handleAuthenticate}
                   aioha={aioha}
-                  shouldShowSwitchUser={false}
                 />
               </div>
             </div>
