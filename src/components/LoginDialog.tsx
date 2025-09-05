@@ -146,6 +146,14 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
     try {
 
       let hiveResult;
+      const currentLoggedInUser = aioha.getCurrentUser();
+      const otherLogins = aioha.getOtherLogins();
+      if (currentLoggedInUser === username.trim()) {
+        aioha.logout();
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } else if (otherLogins && otherLogins[username.trim()]) {
+        AuthService.removeUser(aioha, username.trim());
+      }
 
       // Handle different login methods
       switch (loginMethod) {
