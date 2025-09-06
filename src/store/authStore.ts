@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import CryptoJS from 'crypto-js';
 import type { AuthStore, LoggedInUser } from '../types/auth';
+import { STORAGE_KEYS } from '../constants/storage';
 
 // Encryption/Decryption helpers
 const encryptData = (data: unknown): string => {
@@ -23,8 +24,8 @@ const decryptData = (encryptedData: string): unknown => {
 // Clean up old storage keys
 const cleanupOldStorage = () => {
   if (typeof window !== 'undefined') {
-    localStorage.removeItem('auth-storage');
-    localStorage.removeItem('hive-auth-encrypted');
+    localStorage.removeItem(STORAGE_KEYS.LEGACY_AUTH_STORAGE);
+    localStorage.removeItem(STORAGE_KEYS.LEGACY_HIVE_AUTH_ENCRYPTED);
   }
 };
 
@@ -33,8 +34,8 @@ const initializeState = (): { currentUser: LoggedInUser | null; loggedInUsers: L
   if (typeof window === 'undefined') return { currentUser: null, loggedInUsers: [] };
   
   try {
-    const encryptedUsers = localStorage.getItem('logged-in-users');
-    const encryptedCurrentUser = localStorage.getItem('logged-in-user');
+    const encryptedUsers = localStorage.getItem(STORAGE_KEYS.LOGGED_IN_USERS);
+    const encryptedCurrentUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
     
     const users = encryptedUsers ? decryptData(encryptedUsers) : [];
     const currentUser = encryptedCurrentUser ? decryptData(encryptedCurrentUser) : null;
@@ -74,9 +75,9 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       // Encrypt and store
       if (user) {
         const encryptedUser = encryptData(user);
-        localStorage.setItem('logged-in-user', encryptedUser);
+        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, encryptedUser);
       } else {
-        localStorage.removeItem('logged-in-user');
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
       }
       
       set({ currentUser: user });
@@ -88,7 +89,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       
       // Encrypt and store
       const encryptedUsers = encryptData(updatedUsers);
-      localStorage.setItem('logged-in-users', encryptedUsers);
+      localStorage.setItem(STORAGE_KEYS.LOGGED_IN_USERS, encryptedUsers);
       
       set({ loggedInUsers: updatedUsers });
     },
@@ -99,11 +100,11 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       
       // Encrypt and store
       const encryptedUsers = encryptData(updatedUsers);
-      localStorage.setItem('logged-in-users', encryptedUsers);
+      localStorage.setItem(STORAGE_KEYS.LOGGED_IN_USERS, encryptedUsers);
       
       // If removing current user, clear current user
       if (currentUser?.username === username) {
-        localStorage.removeItem('logged-in-user');
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
         set({ currentUser: null, loggedInUsers: updatedUsers });
       } else {
         set({ loggedInUsers: updatedUsers });
@@ -112,8 +113,8 @@ export const useAuthStore = create<AuthStore>((set, get) => {
     
     clearAllUsers: async () => {
 
-      localStorage.removeItem('logged-in-users');
-      localStorage.removeItem('logged-in-user');
+      localStorage.removeItem(STORAGE_KEYS.LOGGED_IN_USERS);
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
       set({ currentUser: null, loggedInUsers: [] });
     },
     

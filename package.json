@@ -1,6 +1,6 @@
 {
   "name": "hive-authentication",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -18,7 +18,7 @@
   "scripts": {
     "dev": "vite",
     "clean": "rm -r dist/*",
-    "build": "tsc -b && vite build && npx @tailwindcss/cli -i src/build.css -o dist/build.css --minify",
+    "build": "tsc -p tsconfig.build.json && vite build && npx @tailwindcss/cli -i src/build.css -o dist/build.css --minify",
     "lint": "eslint .",
     "prepublish": "pnpm run clean; pnpm run build",
     "preview": "vite preview"
