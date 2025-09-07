@@ -40,7 +40,7 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
   return (
     <>
       {currentUser ? (
-        <div className="flex flex-col items-center" onClick={handleButtonClick}>
+        <div className="flex flex-col items-center" onClick={handleButtonClick} id='user-button'>
           <div className="avatar">
             <div className="w-7 h-7 rounded-full">
               <img
