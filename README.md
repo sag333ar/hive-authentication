@@ -93,6 +93,35 @@ function App() {
 }
 ```
 
+### Programmatic login for private posting key
+
+```
+import { useProgrammaticAuth } from "./hooks/useProgrammaticAuth";
+
+function YouComponent() {
+  const { loginWithPrivateKey } = useProgrammaticAuth(aioha);
+
+  const handleProgrammaticLogin = async () => {
+    const userInfo = await loginWithPrivateKey(user, key, async (hiveResult) => {
+      console.log("Hive result:", hiveResult);
+      // TODO: Add server validation
+      return JSON.stringify({ message: "Server validation successful" });
+    });
+    console.log("User logged in:", userInfo);
+  };
+
+  return (
+    <div>
+      <button onClick={handleProgrammaticLogin} className="btn btn-primary">
+        Programmatic Login
+      </button>
+    </div>
+  );
+}
+```
+
+---
+
 **Note**: Both configurations are required even if you only plan to use one provider. This ensures the Aioha library is properly initialized with all necessary settings.
 
 **HiveAuth Support**: The package now fully supports HiveAuth login! When using HiveAuth:
@@ -136,6 +165,125 @@ When a user chooses HiveAuth login:
 - **30-Second Timer**: Countdown timer with automatic expiry
 - **Cancel Option**: User can manually cancel QR code display
 - **Seamless UX**: Smooth transition between login form and QR code display
+
+## Programmatic Authentication
+
+For developers who need to authenticate users programmatically (e.g., when they already have private keys stored securely), the package provides a programmatic authentication API.
+
+### Using the Hook (Recommended)
+
+```tsx
+import { useProgrammaticAuth } from 'hive-authentication';
+
+function MyComponent() {
+  const { 
+    loginWithPrivateKey, 
+    switchToUser, 
+    logout, 
+    logoutAll, 
+    getCurrentUser, 
+    getAllUsers 
+  } = useProgrammaticAuth(aioha);
+
+  const handleLogin = async () => {
+    try {
+      // Login with private key (no server validation)
+      const user = await loginWithPrivateKey('username', '5J...');
+      console.log('Logged in:', user.username);
+    } catch (error) {
+      console.error('Login failed:', error.message);
+    }
+  };
+
+  const handleLoginWithServerValidation = async () => {
+    try {
+      // Login with private key + server validation
+      const user = await loginWithPrivateKey('username', '5J...', async (hiveResult) => {
+        const response = await fetch('/api/validate', {
+          method: 'POST',
+          body: JSON.stringify(hiveResult)
+        });
+        return response.json();
+      });
+      console.log('Logged in with server validation:', user.username);
+    } catch (error) {
+      console.error('Login failed:', error.message);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={handleLogin}>Login Programmatically</button>
+      <button onClick={handleLoginWithServerValidation}>Login with Server Validation</button>
+    </div>
+  );
+}
+```
+
+### Using the Service Class
+
+```tsx
+import { ProgrammaticAuth } from 'hive-authentication';
+
+const programmaticAuth = new ProgrammaticAuth(aioha);
+
+// Login with private key
+const user = await programmaticAuth.loginWithPrivateKey('username', '5J...');
+
+// Switch to another user
+await programmaticAuth.switchToUser('other-username');
+
+// Get current user
+const currentUser = programmaticAuth.getCurrentUser();
+
+// Logout current user
+await programmaticAuth.logout();
+
+// Logout all users
+await programmaticAuth.logoutAll();
+```
+
+### API Reference
+
+#### `loginWithPrivateKey(username, privatePostingKey, serverCallback?)`
+
+Authenticates a user with their private posting key.
+
+- **username**: The Hive username
+- **privatePostingKey**: The private posting key (starts with '5J')
+- **serverCallback**: Optional callback function for server validation
+- **Returns**: Promise<LoggedInUser>
+
+#### `switchToUser(username)`
+
+Switches to a previously logged-in user.
+
+- **username**: The username to switch to
+- **Returns**: Promise<void>
+
+#### `logout()`
+
+Logs out the current user.
+
+- **Returns**: Promise<void>
+
+#### `logoutAll()`
+
+Logs out all users.
+
+- **Returns**: Promise<void>
+
+#### `getCurrentUser()`
+
+Gets the currently logged-in user.
+
+- **Returns**: LoggedInUser | null
+
+#### `getAllUsers()`
+
+Gets all logged-in users.
+
+- **Returns**: LoggedInUser[]
 
 ## State Management
 

@@ -5,9 +5,11 @@ export { SwitchUserModal } from './components/SwitchUserModal';
 
 // Store and hooks
 export { useAuthStore } from './store/authStore';
+export { useProgrammaticAuth } from './hooks/useProgrammaticAuth';
 
 // Services
 export { AuthService } from './services/authService';
+export { ProgrammaticAuth } from './services/programmaticAuth';
 
 // Types
 export type {

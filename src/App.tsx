@@ -6,6 +6,7 @@ import { ApiVideoFeedType, type VideoFeedItem } from "./types/video";
 import VideoFeed from "./components/video/VideoFeed";
 import { initAioha } from '@aioha/aioha'
 import { AiohaProvider } from '@aioha/react-provider'
+import { useProgrammaticAuth } from "./hooks/useProgrammaticAuth";
 
 const aioha = initAioha(
   {
@@ -24,8 +25,11 @@ const aioha = initAioha(
 
 function App() {
   const { currentUser, loggedInUsers } = useAuthStore();
+  const { loginWithPrivateKey } = useProgrammaticAuth(aioha);
   const [selectedTab, setSelectedTab] = useState<ApiVideoFeedType>(ApiVideoFeedType.HOME);
   const [searchQuery, setSearchQuery] = useState("");
+  const user = "user-name-goes-here";
+  const key = "your-private-posting-key";
 
   useEffect(() => {
     let previousUser = currentUser;
@@ -91,6 +95,15 @@ function App() {
 
   const handleAuthorClick = (author: string) => {
     console.log("Author clicked:", author);
+  };
+
+  const handleProgrammaticLogin = async () => {
+    const userInfo = await loginWithPrivateKey(user, key, async (hiveResult) => {
+      console.log("Hive result:", hiveResult);
+      // TODO: Add server validation
+      return JSON.stringify({ message: "Server validation successful" });
+    });
+    console.log("User logged in:", userInfo);
   };
 
   const renderFeed = () => {
@@ -177,6 +190,9 @@ function App() {
                   onAuthenticate={handleAuthenticate}
                   aioha={aioha}
                 />
+              </div>
+              <div className="card-actions justify-center mt-4">
+                <button onClick={handleProgrammaticLogin} className="btn btn-primary">Programmatic Login</button>
               </div>
             </div>
           </div>
