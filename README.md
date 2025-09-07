@@ -82,6 +82,9 @@ function App() {
             onAuthenticate={handleAuthenticate}
             aioha={aioha}
             shouldShowSwitchUser = {true} // Optional true
+            onClose={() => {
+              console.log("AuthButton dialog closed");
+            }}
           />
           
           {currentUser && (

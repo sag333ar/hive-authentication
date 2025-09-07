@@ -4,10 +4,11 @@ import { LoginDialog } from './LoginDialog';
 import { SwitchUserModal } from './SwitchUserModal';
 import type { AuthButtonProps } from '../types/auth';
 
-export const AuthButton: React.FC<AuthButtonProps> = ({ 
+export const AuthButton: React.FC<AuthButtonProps> = ({
   onAuthenticate,
   aioha,
   shouldShowSwitchUser = true,
+  onClose,
 }) => {
   // const { aioha } = useAioha();
   const { setHiveAuthPayload } = useAuthStore();
@@ -20,8 +21,8 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
       setHiveAuthPayload(payload);
     });
   }, [aioha]);
-  
-  
+
+
   const handleButtonClick = () => {
     if (currentUser) {
       // Show switch user modal
@@ -31,48 +32,58 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
       setIsLoginDialogOpen(true);
     }
   };
-  
+
   const getAvatarUrl = (username: string) => {
     return `https://images.hive.blog/u/${username}/avatar`;
   };
-  
+
   return (
     <>
-        {currentUser ? (
-          <div className="flex flex-col items-center" onClick={handleButtonClick}>
-            <div className="avatar">
-              <div className="w-7 h-7 rounded-full">
-                <img 
-                  src={getAvatarUrl(currentUser.username)} 
-                  alt={`${currentUser.username} avatar`}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://images.hive.blog/u/0/avatar';
-                  }}
-                />
-              </div>
+      {currentUser ? (
+        <div className="flex flex-col items-center" onClick={handleButtonClick}>
+          <div className="avatar">
+            <div className="w-7 h-7 rounded-full">
+              <img
+                src={getAvatarUrl(currentUser.username)}
+                alt={`${currentUser.username} avatar`}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://images.hive.blog/u/0/avatar';
+                }}
+              />
             </div>
-            <div className="text-black/80 dark:text-gray-300 text-sm">{currentUser.username}</div>
           </div>
-        ) : (
-          <button className="btn btn-primary" onClick={handleButtonClick}>
-            Login
-          </button>
-        )}
-      
+          <div className="text-black/80 dark:text-gray-300 text-sm">{currentUser.username}</div>
+        </div>
+      ) : (
+        <button className="btn btn-primary" onClick={handleButtonClick}>
+          Login
+        </button>
+      )}
+
       <LoginDialog
         isOpen={isLoginDialogOpen}
-        onClose={() => setIsLoginDialogOpen(false)}
+        onClose={
+          () => {
+            setIsLoginDialogOpen(false);
+            onClose?.();
+          }
+        }
         onAuthenticate={onAuthenticate}
         aioha={aioha}
       />
-      
+
       <SwitchUserModal
         isOpen={isSwitchUserModalOpen}
         shouldShowSwitchUser={shouldShowSwitchUser ?? true}
-        onClose={() => setIsSwitchUserModalOpen(false)}
+        onClose={
+          () => {
+            setIsSwitchUserModalOpen(false);
+            onClose?.();
+          }
+        }
         onAuthenticate={onAuthenticate}
         aioha={aioha}
       />
-      </>
+    </>
   );
 };

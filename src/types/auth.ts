@@ -69,5 +69,6 @@ export interface AuthButtonProps {
   onAuthenticate: (hiveResult: HiveAuthResult) => Promise<string>;
   aioha: Aioha;
   shouldShowSwitchUser?: boolean;
+  onClose?: () => void;
 }
 

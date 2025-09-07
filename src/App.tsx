@@ -189,6 +189,9 @@ function App() {
                 <AuthButton
                   onAuthenticate={handleAuthenticate}
                   aioha={aioha}
+                  onClose={() => {
+                    console.log("AuthButton dialog closed");
+                  }}
                 />
               </div>
               <div className="card-actions justify-center mt-4">
