@@ -48,47 +48,7 @@ export function useProgrammaticAuth(aioha: Aioha) {
     [programmaticAuth]
   );
 
-  const switchToUser = useCallback(
-    async (username: string): Promise<void> => {
-      return programmaticAuth.switchToUser(username);
-    },
-    [programmaticAuth]
-  );
-
-  const logout = useCallback(
-    async (): Promise<void> => {
-      return programmaticAuth.logout();
-    },
-    [programmaticAuth]
-  );
-
-  const logoutAll = useCallback(
-    async (): Promise<void> => {
-      return programmaticAuth.logoutAll();
-    },
-    [programmaticAuth]
-  );
-
-  const getCurrentUser = useCallback(
-    (): LoggedInUser | null => {
-      return programmaticAuth.getCurrentUser();
-    },
-    [programmaticAuth]
-  );
-
-  const getAllUsers = useCallback(
-    (): LoggedInUser[] => {
-      return programmaticAuth.getAllUsers();
-    },
-    [programmaticAuth]
-  );
-
   return {
     loginWithPrivateKey,
-    switchToUser,
-    logout,
-    logoutAll,
-    getCurrentUser,
-    getAllUsers,
   };
 }
