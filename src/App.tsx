@@ -3,7 +3,7 @@ import { AuthButton } from "./components/AuthButton";
 import { useAuthStore } from "./store/authStore";
 import type { HiveAuthResult, LoggedInUser } from "./types/auth";
 import { ApiVideoFeedType, type VideoFeedItem } from "./types/video";
-import VideoFeed from "./components/video/VideoFeed";
+import { VideoFeed } from "./components/video/VideoFeed";
 import { initAioha } from '@aioha/aioha'
 import { AiohaProvider } from '@aioha/react-provider'
 import { useProgrammaticAuth } from "./hooks/useProgrammaticAuth";

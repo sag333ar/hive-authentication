@@ -17,14 +17,14 @@ interface VideoFeedProps {
 
 const feedCache = new Map<string, VideoFeedItem[]>();
 
-const VideoFeed = ({
+export const VideoFeed: React.FC<VideoFeedProps> = ({
   feedType,
   username,
   communityId,
   tag,
   onVideoClick,
   onAuthorClick,
-}: VideoFeedProps) => {
+}) => {
   const [videos, setVideos] = useState<VideoFeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -333,5 +333,3 @@ const VideoFeed = ({
     </div>
   );
 };
-
-export default VideoFeed;

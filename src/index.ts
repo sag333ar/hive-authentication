@@ -2,6 +2,8 @@
 export { AuthButton } from './components/AuthButton';
 export { LoginDialog } from './components/LoginDialog';
 export { SwitchUserModal } from './components/SwitchUserModal';
+export { Wallet } from './components/Wallet';
+export { VideoFeed } from './components/video/VideoFeed';
 
 // Store and hooks
 export { useAuthStore } from './store/authStore';
