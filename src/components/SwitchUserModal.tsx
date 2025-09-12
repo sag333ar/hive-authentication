@@ -12,7 +12,8 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
   onClose, 
   onAuthenticate,
   aioha,
-    shouldShowSwitchUser = true,
+  shouldShowSwitchUser = true,
+  onSignMessage,
 }) => { 
   const [showAddAccount, setShowAddAccount] = useState(false);
   const { currentUser, loggedInUsers, setCurrentUser, removeLoggedInUser, clearAllUsers } = useAuthStore();
@@ -20,7 +21,7 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
   const handleSwitchUser = async (user: LoggedInUser) => {
     setCurrentUser(user);
     if (user.privatePostingKey) {
-      await AuthService.switchUserWithPrivatePostingKey(aioha, user.username, user.privatePostingKey);
+      await AuthService.switchUserWithPrivatePostingKey(aioha, user.username, user.privatePostingKey, onSignMessage());
     }
     AuthService.switchUser(aioha, user.username);
     onClose();
@@ -92,6 +93,7 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
         onBack={handleBackFromLogin}
         onAuthenticate={onAuthenticate}
         aioha={aioha}
+        onSignMessage={onSignMessage}
       />
     );
   }

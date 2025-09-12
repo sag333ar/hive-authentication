@@ -15,6 +15,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
   onBack,
   onAuthenticate,
   aioha,
+  onSignMessage,
 }) => {
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -124,7 +125,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
     };
   }, []);
 
-  const handleLogin = async () => {
+  const handleLogin = async (proof: string) => {
     if (!username.trim()) return;
 
     // Validate private key if that method is selected
@@ -158,13 +159,13 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
       // Handle different login methods
       switch (loginMethod) {
         case 'keychain':
-          hiveResult = await AuthService.loginWithHiveKeychain(aioha, username.trim());
+          hiveResult = await AuthService.loginWithHiveKeychain(aioha, username.trim(), proof);
           break;
         case 'hiveauth':
-          hiveResult = await AuthService.loginWithHiveAuth(aioha, username.trim());
+          hiveResult = await AuthService.loginWithHiveAuth(aioha, username.trim(), proof);
           break;
         case 'privateKey':
-          hiveResult = await AuthService.loginWithPrivatePostingKey(aioha, username.trim(), privateKey.trim());
+          hiveResult = await AuthService.loginWithPrivatePostingKey(aioha, username.trim(), privateKey.trim(), proof);
           break;
         default:
           throw new Error('Invalid login method selected');
@@ -194,7 +195,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && username.trim() && !isLoading) {
-      handleLogin();
+      handleLogin(onSignMessage());
     }
   };
 
@@ -407,7 +408,9 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
               {/* Login Button */}
               <button
                 className="btn btn-primary w-full mt-4"
-                onClick={handleLogin}
+                onClick={() => {
+                  handleLogin(onSignMessage());
+                }}
                 disabled={isLoading || !username.trim() || (loginMethod === 'privateKey' && !privateKey.trim())}
               >
                 {isLoading ? (

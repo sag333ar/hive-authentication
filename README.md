@@ -334,7 +334,12 @@ interface AuthButtonProps {
 
 **Usage:**
 ```tsx
-<AuthButton onAuthenticate={handleAuthenticate} />
+<AuthButton 
+onAuthenticate={handleAuthenticate} 
+onSignMessage={() => {
+  return new Date().toISOString();
+}}
+/>
 ```
 
 ### Store

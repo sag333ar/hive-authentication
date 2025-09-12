@@ -192,6 +192,9 @@ function App() {
                   onClose={() => {
                     console.log("AuthButton dialog closed");
                   }}
+                  onSignMessage={() => {
+                    return new Date().toISOString();
+                  }}
                 />
               </div>
               <div className="card-actions justify-center mt-4">

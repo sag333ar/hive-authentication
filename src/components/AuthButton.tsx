@@ -9,6 +9,7 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
   aioha,
   shouldShowSwitchUser = true,
   onClose,
+  onSignMessage,
 }) => {
   // const { aioha } = useAioha();
   const { setHiveAuthPayload } = useAuthStore();
@@ -70,6 +71,7 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
         }
         onAuthenticate={onAuthenticate}
         aioha={aioha}
+        onSignMessage={onSignMessage}
       />
 
       <SwitchUserModal
@@ -83,6 +85,7 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
         }
         onAuthenticate={onAuthenticate}
         aioha={aioha}
+        onSignMessage={onSignMessage}
       />
     </>
   );

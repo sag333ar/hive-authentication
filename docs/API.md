@@ -45,7 +45,11 @@ function App() {
   return (
     <div>
       <h1>My App</h1>
-      <AuthButton />
+      <AuthButton
+      onSignMessage={() => {
+        return new Date().toISOString();
+      }}
+      />
     </div>
   );
 }
@@ -409,7 +413,11 @@ function MyApp() {
     }
   };
 
-  return <AuthButton />;
+  return <AuthButton
+    onSignMessage={() => {
+      return new Date().toISOString();
+    }}
+  />;
 }
 ```
 

@@ -6,10 +6,10 @@ const client = new dhive.Client(["https://api.hive.blog"]);
 
 export class AuthService {
 
-  static async loginWithHiveKeychain(aioha: Aioha, username: string): Promise<HiveAuthResult> {
+  static async loginWithHiveKeychain(aioha: Aioha, username: string, proof: string): Promise<HiveAuthResult> {
     try {
       // Create timestamp for proof
-      const timestamp = new Date().toISOString();
+      const timestamp = proof;
 
       // Login with Hive blockchain using Keychain
       const result = await aioha.login(Providers.Keychain, username, { msg: timestamp, keyType: KeyTypes.Posting });
@@ -31,11 +31,11 @@ export class AuthService {
     }
   }
 
-  static async loginWithHiveAuth(aioha: Aioha, username: string): Promise<HiveAuthResult> {
+  static async loginWithHiveAuth(aioha: Aioha, username: string, proof: string): Promise<HiveAuthResult> {
 
     try {
       // Create timestamp for proof
-      const timestamp = new Date().toISOString();
+      const timestamp = proof;
 
       // Login with Hive blockchain using HiveAuth
       const result = await aioha.login(Providers.HiveAuth, username, {
@@ -60,7 +60,7 @@ export class AuthService {
     }
   }
 
-  static async loginWithPrivatePostingKey(aioha: Aioha, username: string, privatePostingKey: string): Promise<HiveAuthResult> {
+  static async loginWithPrivatePostingKey(aioha: Aioha, username: string, privatePostingKey: string, proof: string): Promise<HiveAuthResult> {
 
     try {
       const privateKeyObj = dhive.PrivateKey.fromString(privatePostingKey);
@@ -81,7 +81,7 @@ export class AuthService {
       const plaintextProvider = new PlaintextKeyProvider(privatePostingKey);
       aioha.registerCustomProvider(plaintextProvider);
       // Create timestamp for proof
-      const timestamp = new Date().toISOString();
+      const timestamp = proof;
 
       const result = await aioha.login(Providers.Custom, username, {
         msg: timestamp,
@@ -106,13 +106,13 @@ export class AuthService {
     }
   }
 
-  static async switchUserWithPrivatePostingKey(aioha: Aioha, username: string, privatePostingKey: string): Promise<HiveAuthResult> {
+  static async switchUserWithPrivatePostingKey(aioha: Aioha, username: string, privatePostingKey: string, proof: string): Promise<HiveAuthResult> {
 
     try {
       const plaintextProvider = new PlaintextKeyProvider(privatePostingKey);
       aioha.registerCustomProvider(plaintextProvider);
       // Create timestamp for proof
-      const timestamp = new Date().toISOString();
+      const timestamp = proof;
 
       console.log('Switching to user', username);
 
