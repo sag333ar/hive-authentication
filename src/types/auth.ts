@@ -54,7 +54,7 @@ export interface SwitchUserModalProps {
   onAuthenticate?: (hiveResult: HiveAuthResult) => Promise<string>;
   aioha: Aioha;
   shouldShowSwitchUser?: boolean;
-  onSignMessage: () => string;
+  onSignMessage: (username: string) => string;
 }
 
 export interface LoginDialogProps {
@@ -64,7 +64,7 @@ export interface LoginDialogProps {
   onBack?: () => void;
   onAuthenticate?: (hiveResult: HiveAuthResult) => Promise<string>;
   aioha: Aioha;
-  onSignMessage: () => string;
+  onSignMessage: (username: string) => string;
 }
 
 export interface AuthButtonProps {
@@ -72,6 +72,6 @@ export interface AuthButtonProps {
   aioha: Aioha;
   shouldShowSwitchUser?: boolean;
   onClose?: () => void;
-  onSignMessage: () => string;
+  onSignMessage: (username: string) => string;
 }
 

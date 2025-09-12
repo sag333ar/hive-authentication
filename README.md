@@ -85,8 +85,8 @@ function App() {
             onClose={() => {
               console.log("AuthButton dialog closed");
             }}
-            onSignMessage={() => {
-              return new Date().toISOString();
+            onSignMessage={(username) => {
+              return `${new Date().toISOString()}:${username}`;
             }}
           />
           

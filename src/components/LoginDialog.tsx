@@ -195,7 +195,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && username.trim() && !isLoading) {
-      handleLogin(onSignMessage());
+      handleLogin(onSignMessage(username.trim().toLocaleLowerCase()));
     }
   };
 
@@ -409,7 +409,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
               <button
                 className="btn btn-primary w-full mt-4"
                 onClick={() => {
-                  handleLogin(onSignMessage());
+                  handleLogin(onSignMessage(username.trim().toLocaleLowerCase()));
                 }}
                 disabled={isLoading || !username.trim() || (loginMethod === 'privateKey' && !privateKey.trim())}
               >
