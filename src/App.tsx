@@ -7,6 +7,7 @@ import { VideoFeed } from "./components/video/VideoFeed";
 import { initAioha } from '@aioha/aioha'
 import { AiohaProvider } from '@aioha/react-provider'
 import { useProgrammaticAuth } from "./hooks/useProgrammaticAuth";
+import { BottomToolbarWithSlider } from "./components/BottomToolbarWithSlider";
 
 const aioha = initAioha(
   {
@@ -289,6 +290,10 @@ function App() {
           <h3 className="text-4xl">Video Feeds</h3>
           {renderFeed()}
         </div>
+      </div>
+
+      <div className="sticky bottom-0">
+        <BottomToolbarWithSlider />
       </div>
     </AiohaProvider>
   );

@@ -24,7 +24,7 @@ export const SwitchUserModal: React.FC<
   const handleSwitchUser = async (user: LoggedInUser) => {
     setCurrentUser(user);
     if (user.privatePostingKey) {
-      await AuthService.switchUserWithPrivatePostingKey(aioha, user.username, user.privatePostingKey, onSignMessage(user.username));
+      await AuthService.switchUserWithPrivatePostingKey(aioha, user.username, user.privatePostingKey, onSignMessage(user.username.trim().toLocaleLowerCase()));
     }
     AuthService.switchUser(aioha, user.username);
     onClose();

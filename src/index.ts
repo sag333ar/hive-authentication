@@ -4,6 +4,7 @@ export { LoginDialog } from './components/LoginDialog';
 export { SwitchUserModal } from './components/SwitchUserModal';
 export { Wallet } from './components/Wallet';
 export { VideoFeed } from './components/video/VideoFeed';
+export { BottomToolbarWithSlider } from './components/BottomToolbarWithSlider';
 
 // Store and hooks
 export { useAuthStore } from './store/authStore';
