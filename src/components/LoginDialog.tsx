@@ -8,7 +8,9 @@ import KeychainIcon from '../assets/keychain.svg'
 import HiveAuthIcon from '../assets/hiveauth-light.svg'
 import PrivateKeyIcon from '../assets/privatekey.svg'
 
-export const LoginDialog: React.FC<LoginDialogProps> = ({
+export const LoginDialog: React.FC<
+  LoginDialogProps & { theme?: "light" | "dark" }
+> = ({
   isOpen,
   onClose,
   showBackButton = false,
@@ -16,6 +18,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
   onAuthenticate,
   aioha,
   onSignMessage,
+  theme = "light",
 }) => {
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -38,14 +41,12 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
       setAvatarUrl(null);
     }
   }, [username]);
-
   // to handle the hiveauth payload
   useEffect(() => {
     if (hiveAuthPayload) {
       handleHiveAuthRequest(hiveAuthPayload);
     }
   }, [hiveAuthPayload]);
-
   useEffect(() => {
     const check = async () => {
       await new Promise((res) => setTimeout(res, 500));
@@ -66,7 +67,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
       return () => window.removeEventListener("load", check);
     }
   }, []);
-
   // Handle HiveAuth request and generate QR code
   const handleHiveAuthRequest = async (payload: string) => {
     try {
@@ -82,7 +82,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
 
       setQrCodeDataUrl(qrDataUrl);
       setShowQRCode(true);
-
       // Start 30-second timer
       startTimer();
     } catch (error) {
@@ -94,11 +93,9 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
   // Start 30-second countdown timer
   const startTimer = () => {
     setTimeRemaining(30);
-
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-
     timerRef.current = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
@@ -115,7 +112,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
       });
     }, 1000);
   };
-
   // Clean up timer on unmount
   useEffect(() => {
     return () => {
@@ -124,7 +120,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
       }
     };
   }, []);
-
   const handleLogin = async (proof: string) => {
     if (!username.trim()) return;
 
@@ -202,8 +197,16 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="modal modal-open">
-      <div className="modal-box absolute">
+    <div
+      className={`modal modal-open ${
+        theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
+      }`}
+    >
+      <div
+        className={`modal-box absolute ${
+          theme === "dark" ? "bg-gray-900" : "bg-white"
+        }`}
+      >
         <div className="flex items-center justify-between mb-4">
           {showBackButton && (
             <button
@@ -219,13 +222,16 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
           </h3>
 
           <button
-            className="btn btn-sm btn-circle btn-ghost bg-base-200 hover:bg-base-300 border border-base-300"
+            className={`btn btn-sm btn-circle btn-ghost ${
+              theme === "dark"
+                ? "bg-gray-700 hover:bg-gray-600"
+                : "bg-gray-100 hover:bg-gray-200 border border-gray-300"
+            }`}
             onClick={onClose}
           >
             ✕
           </button>
         </div>
-
         {/* HiveAuth QR Code Display - Show this when QR code is active */}
         {showQRCode && hiveAuthPayload && (
           <div className="text-center">
@@ -250,7 +256,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
             <p className="text-xs text-gray-500">
               Waiting for wallet approval...
             </p>
-
             {/* Cancel button */}
             <button
               className="btn btn-outline btn-sm mt-4"
@@ -267,7 +272,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
             </button>
           </div>
         )}
-
         {/* Login Form - Hide this when QR code is active */}
         {!showQRCode && (
           <>
@@ -275,7 +279,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
               <label className="label">
                 <span className="label-text">Hive Username</span>
               </label>
-
               <div className="flex items-center gap-3">
                 {avatarUrl && (
                   <div className="avatar">
@@ -295,7 +298,11 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
                 <input
                   type="text"
                   placeholder="Enter username"
-                  className="input input-bordered flex-1"
+                  className={`input input-bordered flex-1 ${
+                    theme === "dark"
+                      ? "bg-gray-800 text-white border-gray-600"
+                      : "bg-gray-100 text-black border-gray-300"
+                  }`}
                   value={username}
                   onChange={(e) => {
                     const value = e.target.value;
@@ -320,7 +327,11 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
                 <input
                   type="password"
                   placeholder="Enter your private posting key"
-                  className="input input-bordered w-full"
+                  className={`input input-bordered w-full ${
+                    theme === "dark"
+                      ? "bg-gray-800 text-white border-gray-600"
+                      : "bg-gray-100 text-black border-gray-300"
+                  }`}
                   value={privateKey}
                   onChange={(e) => setPrivateKey(e.target.value)}
                   onKeyPress={handleKeyPress}
@@ -328,7 +339,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
                 />
               </div>
             )}
-
             <div className="mt-4">
               <p className="text-sm text-gray-600 mb-3 text-center">
                 Choose your login method:
@@ -337,11 +347,13 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
               <div className="flex flex-row flex-wrap gap-4 justify-center items-center">
                 {/* Login method options */}
                 <div className="form-control" style={{ display: isKeychainEnabled ? 'flex' : 'none' }}>
-                  <label 
+                  <label
                     className={`label cursor-pointer rounded-lg px-4 py-2 transition-colors ${
-                      loginMethod === 'keychain' 
-                        ? 'bg-primary text-primary-content' 
-                        : 'border border-base-300 hover:bg-base-100'
+                      loginMethod === "keychain"
+                        ? "bg-primary text-primary-content"
+                        : theme === "dark"
+                        ? "border border-base-300 hover:bg-gray-700 hover:text-white"
+                        : "border border-gray-300 hover:bg-gray-200 hover:text-black"
                     }`}
                   >
                     <input
@@ -359,11 +371,13 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
                 </div>
 
                 <div className="form-control">
-                  <label 
+                  <label
                     className={`label cursor-pointer rounded-lg px-4 py-2 transition-colors ${
-                      loginMethod === 'hiveauth' 
-                        ? 'bg-primary text-primary-content' 
-                        : 'border border-base-300 hover:bg-base-100'
+                      loginMethod === "hiveauth"
+                        ? "bg-primary text-primary-content"
+                        : theme === "dark"
+                        ? "border border-base-300 hover:bg-gray-700 hover:text-white"
+                        : "border border-gray-300 hover:bg-gray-200 hover:text-black"
                     }`}
                   >
                     <input
@@ -381,11 +395,13 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
                 </div>
 
                 <div className="form-control">
-                  <label 
+                  <label
                     className={`label cursor-pointer rounded-lg px-4 py-2 transition-colors ${
-                      loginMethod === 'privateKey' 
-                        ? 'bg-primary text-primary-content' 
-                        : 'border border-base-300 hover:bg-base-100'
+                      loginMethod === "privateKey"
+                        ? "bg-primary text-primary-content"
+                        : theme === "dark"
+                        ? "border border-base-300 hover:bg-gray-700 hover:text-white"
+                        : "border border-gray-300 hover:bg-gray-200 hover:text-black"
                     }`}
                   >
                     <input
@@ -407,7 +423,11 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
 
               {/* Login Button */}
               <button
-                className="btn btn-primary w-full mt-4"
+                className={`btn w-full mt-4 ${
+                  theme === "dark"
+                    ? "bg-primary text-white hover:bg-primary-focus border-none"
+                    : "bg-blue-500 text-white hover:bg-blue-600 border-none"
+                }`}
                 onClick={() => {
                   handleLogin(onSignMessage(username.trim().toLocaleLowerCase()));
                 }}
@@ -435,7 +455,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
           </div>
         )}
       </div>
-
       {/* Backdrop */}
       <div className="modal-backdrop" onClick={onClose}></div>
     </div>

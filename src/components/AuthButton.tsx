@@ -1,15 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { useAuthStore } from '../store/authStore';
-import { LoginDialog } from './LoginDialog';
-import { SwitchUserModal } from './SwitchUserModal';
-import type { AuthButtonProps } from '../types/auth';
+import React, { useEffect, useState } from "react";
+import { useAuthStore } from "../store/authStore";
+import { LoginDialog } from "./LoginDialog";
+import { SwitchUserModal } from "./SwitchUserModal";
+import type { AuthButtonProps } from "../types/auth";
 
-export const AuthButton: React.FC<AuthButtonProps> = ({
+export const AuthButton: React.FC<
+  AuthButtonProps & { theme?: "light" | "dark" }
+> = ({
   onAuthenticate,
   aioha,
   shouldShowSwitchUser = true,
   onClose,
   onSignMessage,
+  theme = "light", // Default to "light" theme
 }) => {
   // const { aioha } = useAioha();
   const { setHiveAuthPayload } = useAuthStore();
@@ -18,11 +21,10 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
   const { currentUser } = useAuthStore();
 
   useEffect(() => {
-    aioha.on('hiveauth_login_request', (payload: string) => {
+    aioha.on("hiveauth_login_request", (payload: string) => {
       setHiveAuthPayload(payload);
     });
   }, [aioha]);
-
 
   const handleButtonClick = () => {
     if (currentUser) {
@@ -33,59 +35,75 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
       setIsLoginDialogOpen(true);
     }
   };
-
   const getAvatarUrl = (username: string) => {
     return `https://images.hive.blog/u/${username}/avatar`;
   };
-
   return (
     <>
       {currentUser ? (
-        <div className="flex flex-col items-center" onClick={handleButtonClick} id='user-button'>
+        <div
+          className={`flex flex-col items-center ${
+            theme === "dark" ? "text-gray-300" : "text-gray-700"
+          }`}
+          onClick={handleButtonClick}
+          id="user-button"
+        >
           <div className="avatar">
             <div className="w-7 h-7 rounded-full">
               <img
                 src={getAvatarUrl(currentUser.username)}
                 alt={`${currentUser.username} avatar`}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://images.hive.blog/u/0/avatar';
+                  (e.target as HTMLImageElement).src =
+                    "https://images.hive.blog/u/0/avatar";
                 }}
               />
             </div>
           </div>
-          <div className="text-black/80 dark:text-gray-300 text-sm">{currentUser.username}</div>
+          <div
+            className={`text-sm ${
+              theme === "dark" ? "text-gray-300" : "text-gray-800"
+            }`}
+          >
+            {currentUser.username}
+          </div>
         </div>
       ) : (
-        <button className="btn btn-primary" onClick={handleButtonClick}>
+        <button
+          className={`btn ${
+            theme === "dark"
+              ? "bg-primary text-white hover:bg-primary-focus border-none"
+              : "btn-primary"
+          }`}
+          onClick={handleButtonClick}
+        >
           Login
         </button>
       )}
 
       <LoginDialog
         isOpen={isLoginDialogOpen}
-        onClose={
-          () => {
-            setIsLoginDialogOpen(false);
-            onClose?.();
-          }
-        }
+        onClose={() => {
+          setIsLoginDialogOpen(false);
+          onClose?.();
+        }}
         onAuthenticate={onAuthenticate}
         aioha={aioha}
         onSignMessage={onSignMessage}
+        theme={theme} // Pass theme to LoginDialog
       />
 
       <SwitchUserModal
         isOpen={isSwitchUserModalOpen}
         shouldShowSwitchUser={shouldShowSwitchUser ?? true}
-        onClose={
-          () => {
-            setIsSwitchUserModalOpen(false);
-            onClose?.();
-          }
-        }
+        onClose={() => {
+          setIsSwitchUserModalOpen(false);
+          onClose?.();
+        }}
         onAuthenticate={onAuthenticate}
         aioha={aioha}
         onSignMessage={onSignMessage}
+        theme={theme} // Pass theme to SwitchUserModal
       />
     </>
   );

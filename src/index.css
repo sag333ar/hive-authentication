@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
-/* Force light theme */
+/* Remove system theme enforcement */
 :root {
   color-scheme: light;
 }

@@ -11,12 +11,12 @@ import { BottomToolbarWithSlider } from "./components/BottomToolbarWithSlider";
 
 const aioha = initAioha(
   {
-    hivesigner: {
+  hivesigner: {
       app: 'hive-auth-demo.app',
       callbackURL: window.location.origin + '/hivesigner.html',
       scope: ['login', 'vote']
-    },
-    hiveauth: {
+  },
+  hiveauth: {
       name: 'Hive Authentication Demo',
       description: 'A demo app for testing Hive authentication'
     }
@@ -29,16 +29,15 @@ function App() {
   const { loginWithPrivateKey } = useProgrammaticAuth(aioha);
   const [selectedTab, setSelectedTab] = useState<ApiVideoFeedType>(ApiVideoFeedType.HOME);
   const [searchQuery, setSearchQuery] = useState("");
+  const [theme, setTheme] = useState<"light" | "dark">("light"); // Add theme state
   const user = "user-name-goes-here";
   const key = "your-private-posting-key";
 
   useEffect(() => {
     let previousUser = currentUser;
-
     // Subscribe to store changes
     const unsubscribe = useAuthStore.subscribe((state) => {
       const currentUser = state.currentUser;
-
       // Detect login/logout/user switch
       if (currentUser && !previousUser) {
         console.log("User logged in:", currentUser);
@@ -51,15 +50,20 @@ function App() {
       ) {
         console.log("User switched to:", currentUser);
       }
-
       previousUser = currentUser;
     });
-
     return unsubscribe;
   }, [currentUser]);
 
-  const handleAuthenticate = async (hiveResult: HiveAuthResult): Promise<string> => {
-    console.log('Hive authentication result:', hiveResult);
+  useEffect(() => {
+    // Apply the theme manually by setting a data-theme attribute on the HTML element
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
+  const handleAuthenticate = async (
+    hiveResult: HiveAuthResult
+  ): Promise<string> => {
+    console.log("Hive authentication result:", hiveResult);
 
     try {
       const response = await fetch("https://beta-api.distriator.com/login", {
@@ -89,20 +93,18 @@ function App() {
       throw error;
     }
   };
-
   const handleVideoClick = (video: VideoFeedItem) => {
     console.log("Video clicked:", video.permlink, video.author);
   };
-
   const handleAuthorClick = (author: string) => {
     console.log("Author clicked:", author);
   };
 
   const handleProgrammaticLogin = async () => {
     const userInfo = await loginWithPrivateKey(user, key, async (hiveResult) => {
-      console.log("Hive result:", hiveResult);
-      // TODO: Add server validation
-      return JSON.stringify({ message: "Server validation successful" });
+        console.log("Hive result:", hiveResult);
+        // TODO: Add server validation
+        return JSON.stringify({ message: "Server validation successful" });
     });
     console.log("User logged in:", userInfo);
   };
@@ -177,10 +179,28 @@ function App() {
 
   return (
     <AiohaProvider aioha={aioha}>
-      <div className="min-h-screen bg-base-200 p-8">
+      <div
+        className={`min-h-screen ${
+          theme === "dark" ? "bg-gray-800 text-white" : "bg-base-200 text-black"
+        } p-8`}
+      >
         <div className="max-w-4xl mx-auto">
+          {/* Theme Toggle */}
+          <div className="flex justify-end mb-4">
+            <button
+              className="btn btn-outline"
+              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+            >
+              Switch to {theme === "light" ? "Dark" : "Light"} Mode
+            </button>
+          </div>
+
           {/* Auth Section */}
-          <div className="card bg-base-100 shadow-xl mb-8">
+          <div
+            className={`card ${
+              theme === "dark" ? "bg-gray-900" : "bg-base-100"
+            } shadow-xl mb-8`}
+          >
             <div className="card-body">
               <h2 className="card-title text-2xl">Hive Authentication Demo</h2>
               <p className="text-base-content/70">
@@ -196,6 +216,7 @@ function App() {
                   onSignMessage={(username) => {
                     return `${new Date().toISOString()}:${username}`;
                   }}
+                  theme={theme} // Pass theme to AuthButton
                 />
               </div>
               <div className="card-actions justify-center mt-4">
@@ -203,7 +224,6 @@ function App() {
               </div>
             </div>
           </div>
-
           {/* Current User Info */}
           {currentUser && (
             <div className="card bg-green-50 border border-green-200 mb-6">
@@ -226,7 +246,6 @@ function App() {
               </div>
             </div>
           )}
-
           {/* Logged In Users */}
           {loggedInUsers.length > 0 && (
             <div className="card bg-blue-50 border border-blue-200 mb-6">
@@ -249,7 +268,6 @@ function App() {
               </div>
             </div>
           )}
-
           {/* Feed Tabs */}
           <div className="flex flex-wrap gap-2 mb-6">
             {Object.values(ApiVideoFeedType).map((feed) => (
@@ -257,9 +275,9 @@ function App() {
                 key={feed}
                 onClick={() => setSelectedTab(feed)}
                 className={`px-4 py-2 rounded-lg ${selectedTab === feed
-                  ? "bg-primary text-white"
-                  : "bg-gray-200 hover:bg-gray-300 text-gray-500"
-                  }`}
+                    ? "bg-primary text-white"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-500"
+                }`}
               >
                 {feed.replace(/_/g, " ")}
               </button>
@@ -280,5 +298,4 @@ function App() {
     </AiohaProvider>
   );
 }
-
 export default App;
