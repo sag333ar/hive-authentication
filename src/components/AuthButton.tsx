@@ -14,6 +14,7 @@ export const AuthButton: React.FC<
   onSignMessage,
   theme = "light", // Default to "light" theme
 }) => {
+  // const { aioha } = useAioha();
   const { setHiveAuthPayload } = useAuthStore();
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const [isSwitchUserModalOpen, setIsSwitchUserModalOpen] = useState(false);
@@ -34,11 +35,9 @@ export const AuthButton: React.FC<
       setIsLoginDialogOpen(true);
     }
   };
-
   const getAvatarUrl = (username: string) => {
     return `https://images.hive.blog/u/${username}/avatar`;
   };
-
   return (
     <>
       {currentUser ? (
