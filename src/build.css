@@ -1,7 +1,8 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
-/* Force light theme */
+/* Remove system theme enforcement */
+/* Removed the following:
 :root {
   color-scheme: light;
 }
@@ -10,7 +11,7 @@ html {
   color-scheme: light;
 }
 
-/* Override any dark theme variables */
 :root:not([data-theme]) {
   color-scheme: light;
 }
+*/

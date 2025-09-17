@@ -4,30 +4,30 @@ import { useAuthStore } from "./store/authStore";
 import type { HiveAuthResult, LoggedInUser } from "./types/auth";
 import { ApiVideoFeedType, type VideoFeedItem } from "./types/video";
 import { VideoFeed } from "./components/video/VideoFeed";
-import { initAioha } from '@aioha/aioha'
-import { AiohaProvider } from '@aioha/react-provider'
+import { initAioha } from "@aioha/aioha";
+import { AiohaProvider } from "@aioha/react-provider";
 import { useProgrammaticAuth } from "./hooks/useProgrammaticAuth";
 
-const aioha = initAioha(
-  {
-    hivesigner: {
-      app: 'hive-auth-demo.app',
-      callbackURL: window.location.origin + '/hivesigner.html',
-      scope: ['login', 'vote']
-    },
-    hiveauth: {
-      name: 'Hive Authentication Demo',
-      description: 'A demo app for testing Hive authentication'
-    }
-  }
-)
-
+const aioha = initAioha({
+  hivesigner: {
+    app: "hive-auth-demo.app",
+    callbackURL: window.location.origin + "/hivesigner.html",
+    scope: ["login", "vote"],
+  },
+  hiveauth: {
+    name: "Hive Authentication Demo",
+    description: "A demo app for testing Hive authentication",
+  },
+});
 
 function App() {
   const { currentUser, loggedInUsers } = useAuthStore();
   const { loginWithPrivateKey } = useProgrammaticAuth(aioha);
-  const [selectedTab, setSelectedTab] = useState<ApiVideoFeedType>(ApiVideoFeedType.HOME);
+  const [selectedTab, setSelectedTab] = useState<ApiVideoFeedType>(
+    ApiVideoFeedType.HOME
+  );
   const [searchQuery, setSearchQuery] = useState("");
+  const [theme, setTheme] = useState<"light" | "dark">("light"); // Add theme state
   const user = "user-name-goes-here";
   const key = "your-private-posting-key";
 
@@ -57,8 +57,15 @@ function App() {
     return unsubscribe;
   }, [currentUser]);
 
-  const handleAuthenticate = async (hiveResult: HiveAuthResult): Promise<string> => {
-    console.log('Hive authentication result:', hiveResult);
+  useEffect(() => {
+    // Apply the theme manually by setting a data-theme attribute on the HTML element
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
+  const handleAuthenticate = async (
+    hiveResult: HiveAuthResult
+  ): Promise<string> => {
+    console.log("Hive authentication result:", hiveResult);
 
     try {
       const response = await fetch("https://beta-api.distriator.com/login", {
@@ -75,11 +82,13 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error(`Server authentication failed: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Server authentication failed: ${response.status} ${response.statusText}`
+        );
       }
 
       const data = await response.json();
-      console.log('Server response:', data);
+      console.log("Server response:", data);
 
       // Return your server response as JSON string
       return JSON.stringify(data);
@@ -98,11 +107,15 @@ function App() {
   };
 
   const handleProgrammaticLogin = async () => {
-    const userInfo = await loginWithPrivateKey(user, key, async (hiveResult) => {
-      console.log("Hive result:", hiveResult);
-      // TODO: Add server validation
-      return JSON.stringify({ message: "Server validation successful" });
-    });
+    const userInfo = await loginWithPrivateKey(
+      user,
+      key,
+      async (hiveResult) => {
+        console.log("Hive result:", hiveResult);
+        // TODO: Add server validation
+        return JSON.stringify({ message: "Server validation successful" });
+      }
+    );
     console.log("User logged in:", userInfo);
   };
 
@@ -121,31 +134,62 @@ function App() {
         );
       case ApiVideoFeedType.HOME:
         return (
-          <VideoFeed feedType={ApiVideoFeedType.HOME} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
+          <VideoFeed
+            feedType={ApiVideoFeedType.HOME}
+            onVideoClick={handleVideoClick}
+            onAuthorClick={handleAuthorClick}
+          />
         );
       case ApiVideoFeedType.TRENDING:
         return (
-          <VideoFeed feedType={ApiVideoFeedType.TRENDING} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
+          <VideoFeed
+            feedType={ApiVideoFeedType.TRENDING}
+            onVideoClick={handleVideoClick}
+            onAuthorClick={handleAuthorClick}
+          />
         );
       case ApiVideoFeedType.NEW_VIDEOS:
         return (
-          <VideoFeed feedType={ApiVideoFeedType.NEW_VIDEOS} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
+          <VideoFeed
+            feedType={ApiVideoFeedType.NEW_VIDEOS}
+            onVideoClick={handleVideoClick}
+            onAuthorClick={handleAuthorClick}
+          />
         );
       case ApiVideoFeedType.FIRST_UPLOADS:
         return (
-          <VideoFeed feedType={ApiVideoFeedType.FIRST_UPLOADS} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
+          <VideoFeed
+            feedType={ApiVideoFeedType.FIRST_UPLOADS}
+            onVideoClick={handleVideoClick}
+            onAuthorClick={handleAuthorClick}
+          />
         );
       case ApiVideoFeedType.COMMUNITY:
         return (
-          <VideoFeed feedType={ApiVideoFeedType.COMMUNITY} communityId={'hive-163772'} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
+          <VideoFeed
+            feedType={ApiVideoFeedType.COMMUNITY}
+            communityId={"hive-163772"}
+            onVideoClick={handleVideoClick}
+            onAuthorClick={handleAuthorClick}
+          />
         );
       case ApiVideoFeedType.RELATED:
         return (
-          <VideoFeed feedType={ApiVideoFeedType.RELATED} onVideoClick={handleVideoClick} username={'viviana.fitness'} onAuthorClick={handleAuthorClick} />
+          <VideoFeed
+            feedType={ApiVideoFeedType.RELATED}
+            onVideoClick={handleVideoClick}
+            username={"viviana.fitness"}
+            onAuthorClick={handleAuthorClick}
+          />
         );
       case ApiVideoFeedType.TAG_FEED:
         return (
-          <VideoFeed feedType={ApiVideoFeedType.TAG_FEED} tag={'neoxian'} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
+          <VideoFeed
+            feedType={ApiVideoFeedType.TAG_FEED}
+            tag={"neoxian"}
+            onVideoClick={handleVideoClick}
+            onAuthorClick={handleAuthorClick}
+          />
         );
       case ApiVideoFeedType.SEARCH:
         return (
@@ -165,7 +209,9 @@ function App() {
                 onAuthorClick={handleAuthorClick}
               />
             ) : (
-              <p className="text-gray-500">Type at least 4 characters to search...</p>
+              <p className="text-gray-500">
+                Type at least 4 characters to search...
+              </p>
             )}
           </div>
         );
@@ -176,14 +222,33 @@ function App() {
 
   return (
     <AiohaProvider aioha={aioha}>
-      <div className="min-h-screen bg-base-200 p-8">
+      <div
+        className={`min-h-screen ${
+          theme === "dark" ? "bg-gray-800 text-white" : "bg-base-200 text-black"
+        } p-8`}
+      >
         <div className="max-w-4xl mx-auto">
+          {/* Theme Toggle */}
+          <div className="flex justify-end mb-4">
+            <button
+              className="btn btn-outline"
+              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+            >
+              Switch to {theme === "light" ? "Dark" : "Light"} Mode
+            </button>
+          </div>
+
           {/* Auth Section */}
-          <div className="card bg-base-100 shadow-xl mb-8">
+          <div
+            className={`card ${
+              theme === "dark" ? "bg-gray-900" : "bg-base-100"
+            } shadow-xl mb-8`}
+          >
             <div className="card-body">
               <h2 className="card-title text-2xl">Hive Authentication Demo</h2>
               <p className="text-base-content/70">
-                This is a demo of the Hive Authentication package with a working API integration.
+                This is a demo of the Hive Authentication package with a working
+                API integration.
               </p>
               <div className="card-actions justify-center mt-4">
                 <AuthButton
@@ -195,10 +260,16 @@ function App() {
                   onSignMessage={(username) => {
                     return `${new Date().toISOString()}:${username}`;
                   }}
+                  theme={theme} // Pass theme to AuthButton
                 />
               </div>
               <div className="card-actions justify-center mt-4">
-                <button onClick={handleProgrammaticLogin} className="btn btn-primary">Programmatic Login</button>
+                <button
+                  onClick={handleProgrammaticLogin}
+                  className="btn btn-primary"
+                >
+                  Programmatic Login
+                </button>
               </div>
             </div>
           </div>
@@ -207,7 +278,9 @@ function App() {
           {currentUser && (
             <div className="card bg-green-50 border border-green-200 mb-6">
               <div className="card-body">
-                <h3 className="card-title text-green-800">Currently Logged In</h3>
+                <h3 className="card-title text-green-800">
+                  Currently Logged In
+                </h3>
                 <div className="space-y-2 text-green-700">
                   <p>
                     <strong>Username:</strong> {currentUser.username}
@@ -216,10 +289,12 @@ function App() {
                     <strong>Provider:</strong> {currentUser.provider}
                   </p>
                   <p>
-                    <strong>Public Key:</strong> {currentUser.publicKey.substring(0, 20)}...
+                    <strong>Public Key:</strong>{" "}
+                    {currentUser.publicKey.substring(0, 20)}...
                   </p>
                   <p>
-                    <strong>Server Response:</strong> {currentUser.serverResponse.substring(0, 20)}...
+                    <strong>Server Response:</strong>{" "}
+                    {currentUser.serverResponse.substring(0, 20)}...
                   </p>
                 </div>
               </div>
@@ -235,12 +310,17 @@ function App() {
                 </h3>
                 <div className="space-y-2">
                   {loggedInUsers.map((user: LoggedInUser) => (
-                    <div key={user.username} className="text-blue-700 flex items-center gap-2">
+                    <div
+                      key={user.username}
+                      className="text-blue-700 flex items-center gap-2"
+                    >
                       <span>•</span>
                       <span>{user.username}</span>
                       <span className="text-blue-500">({user.provider})</span>
                       {currentUser?.username === user.username && (
-                        <span className="badge badge-primary badge-sm">Current</span>
+                        <span className="badge badge-primary badge-sm">
+                          Current
+                        </span>
                       )}
                     </div>
                   ))}
@@ -255,16 +335,16 @@ function App() {
               <button
                 key={feed}
                 onClick={() => setSelectedTab(feed)}
-                className={`px-4 py-2 rounded-lg ${selectedTab === feed
-                  ? "bg-primary text-white"
-                  : "bg-gray-200 hover:bg-gray-300 text-gray-500"
-                  }`}
+                className={`px-4 py-2 rounded-lg ${
+                  selectedTab === feed
+                    ? "bg-primary text-white"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-500"
+                }`}
               >
                 {feed.replace(/_/g, " ")}
               </button>
             ))}
           </div>
-
         </div>
         {/* Render Feeds */}
         <div>
