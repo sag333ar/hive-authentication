@@ -10,13 +10,20 @@ npm install hive-authentication
 
 ## Quick Start
 
-### 1. Import CSS
+### 1. Environment Variables
+
+```bash
+# Required: Encryption key for local storage
+VITE_LOCAL_KEY=your-secure-encryption-key
+```
+
+### 2. Import CSS
 
 ```tsx
 import 'hive-authentication/build.css';
 ```
 
-### 2. Use the Auth Button with Callback
+### 3. Use the Auth Button with Callback
 
 ```tsx
 import { AuthButton, useAuthStore } from 'hive-authentication';
@@ -88,6 +95,7 @@ function App() {
             onSignMessage={(username) => {
               return `${new Date().toISOString()}:${username}`;
             }}
+            theme={"light"} // Optional light
           />
           
           {currentUser && (
@@ -371,13 +379,6 @@ interface HiveAuthResult {
 interface LoggedInUser extends HiveAuthResult {
   serverResponse: string; // Your server response
 }
-```
-
-## Environment Variables
-
-```bash
-# Required: Encryption key for local storage
-VITE_LOCAL_KEY=your-secure-encryption-key
 ```
 
 ## License
