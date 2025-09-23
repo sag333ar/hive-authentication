@@ -16,10 +16,15 @@ export const BottomToolbarWithSlider: React.FC<BottomToolbarWithSliderProps> = (
 }) => {
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const username = "sagarkothari88";
-  const avatarUrl = `https://images.hive.blog/u/${username}/avatar?${Date.now()}`;
+  const avatarUrl = `https://images.hive.blog/u/${username}/avatar`;
 
   const items: BottomBarItem[] = [
-    { imagePath: avatarUrl, label: "Vote", url: "https://witness.the-hive-mobile.app/#/witnesses/@sagarkothari88", isNetwork: true },
+    {
+      imagePath: avatarUrl,
+      label: "Vote",
+      url: `https://witness.the-hive-mobile.app/#/witnesses/@${username}`,
+      isNetwork: true,
+    },
     { imagePath: "/images/hive_inbox_logo.png", label: "Inbox", url: "https://inbox.the-hive-mobile.app" },
     { imagePath: "/images/hive-stats.png", label: "Stats", url: "https://stats.the-hive-mobile.app" },
     { imagePath: "/images/donate_logo.png", label: "Donate", url: "https://donate.the-hive-mobile.app" },
@@ -64,10 +69,7 @@ export const BottomToolbarWithSlider: React.FC<BottomToolbarWithSliderProps> = (
                   src={item.imagePath}
                   alt={item.label}
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      "https://via.placeholder.com/32?text=?";
-                  }}
+                  loading="lazy"
                 />
               </div>
 
