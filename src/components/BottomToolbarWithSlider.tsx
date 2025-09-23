@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
+import hiveInboxLogo from "../assets/hive_inbox_logo.png";
+import hiveStatsLogo from "../assets/hive-stats.png";
+import donateLogo from "../assets/donate_logo.png";
+import hifindLogo from "../assets/hifind_logo.png";
+import voteLogo from "../assets/vote_logo.png";
 
-type BottomBarItem = {
+export type BottomBarItem = {
   imagePath: string;
   label: string;
   url: string;
@@ -9,36 +14,43 @@ type BottomBarItem = {
 
 interface BottomToolbarWithSliderProps {
   backgroundColor?: string;
+  items?: BottomBarItem[];
+  username?: string;
+  autoSlideInterval?: number;
 }
 
 export const BottomToolbarWithSlider: React.FC<BottomToolbarWithSliderProps> = ({
   backgroundColor = "#3C3C3C",
+  items: customItems,
+  username = "sagarkothari88",
+  autoSlideInterval = 2000,
 }) => {
   const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const username = "sagarkothari88";
   const avatarUrl = `https://images.hive.blog/u/${username}/avatar`;
 
-  const items: BottomBarItem[] = [
+  const defaultItems: BottomBarItem[] = [
     {
       imagePath: avatarUrl,
       label: "Vote",
       url: `https://witness.the-hive-mobile.app/#/witnesses/@${username}`,
       isNetwork: true,
     },
-    { imagePath: "/images/hive_inbox_logo.png", label: "hReplier", url: "https://hreplier.sagarkothari88.one" },
-    { imagePath: "/images/hive-stats.png", label: "Stats", url: "https://stats.the-hive-mobile.app" },
-    { imagePath: "/images/donate_logo.png", label: "Donate", url: "https://donate.the-hive-mobile.app" },
-    { imagePath: "/images/hifind_logo.png", label: "HiFind", url: "https://hifind.the-hive-mobile.app" },
-    { imagePath: "/images/vote_logo.png", label: "Witness", url: "https://witness.the-hive-mobile.app" },
+    { imagePath: hiveInboxLogo, label: "hReplier", url: "https://hreplier.sagarkothari88.one" },
+    { imagePath: hiveStatsLogo, label: "Stats", url: "https://stats.the-hive-mobile.app" },
+    { imagePath: donateLogo, label: "Donate", url: "https://donate.the-hive-mobile.app" },
+    { imagePath: hifindLogo, label: "HiFind", url: "https://hifind.the-hive-mobile.app" },
+    { imagePath: voteLogo, label: "Witness", url: "https://witness.the-hive-mobile.app" },
   ];
+
+  const items = customItems || defaultItems;
 
   // Auto slider logic
   useEffect(() => {
     const interval = setInterval(() => {
       setHighlightedIndex((prev) => (prev + 1) % items.length);
-    }, 2000);
+    }, autoSlideInterval);
     return () => clearInterval(interval);
-  }, [items.length]);
+  }, [items.length, autoSlideInterval]);
 
   const launchUrl = (url: string) => {
     window.open(url, "_blank");
