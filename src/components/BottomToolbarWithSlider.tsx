@@ -25,7 +25,7 @@ export const BottomToolbarWithSlider: React.FC<BottomToolbarWithSliderProps> = (
       url: `https://witness.the-hive-mobile.app/#/witnesses/@${username}`,
       isNetwork: true,
     },
-    { imagePath: "/images/hive_inbox_logo.png", label: "Inbox", url: "https://inbox.the-hive-mobile.app" },
+    { imagePath: "/images/hive_inbox_logo.png", label: "hReplier", url: "https://hreplier.sagarkothari88.one" },
     { imagePath: "/images/hive-stats.png", label: "Stats", url: "https://stats.the-hive-mobile.app" },
     { imagePath: "/images/donate_logo.png", label: "Donate", url: "https://donate.the-hive-mobile.app" },
     { imagePath: "/images/hifind_logo.png", label: "HiFind", url: "https://hifind.the-hive-mobile.app" },
