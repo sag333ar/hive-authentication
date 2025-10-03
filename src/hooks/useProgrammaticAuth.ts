@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { ProgrammaticAuth } from '../services/programmaticAuth';
 import type { Aioha } from '@aioha/aioha';
 import type { HiveAuthResult, LoggedInUser } from '../types/auth';
+import { AuthService } from '../services/authService';
 
 /**
  * Hook for programmatic authentication
@@ -43,6 +44,14 @@ export function useProgrammaticAuth(aioha: Aioha) {
       privatePostingKey: string,
       serverCallback?: (hiveResult: HiveAuthResult) => Promise<string>
     ): Promise<LoggedInUser> => {
+      const currentLoggedInUser = aioha.getCurrentUser();
+      const otherLogins = aioha.getOtherLogins();
+      if (currentLoggedInUser === username.trim()) {
+        aioha.logout();
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } else if (otherLogins && otherLogins[username.trim()]) {
+        AuthService.removeUser(aioha, username.trim());
+      }
       return programmaticAuth.loginWithPrivateKey(username, privatePostingKey, serverCallback);
     },
     [programmaticAuth]

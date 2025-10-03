@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Aioha, KeyTypes, Providers } from '@aioha/aioha';
 import { PlaintextKeyProvider } from '@aioha/aioha/build/providers/custom/plaintext.js';
 import * as dhive from "@hiveio/dhive";
