@@ -23,6 +23,7 @@ export const SwitchUserModal: React.FC<
 
   const handleSwitchUser = async (user: LoggedInUser) => {
     setCurrentUser(user);
+    if (user.privatePostingKey) {
       const currentLoggedInUser = aioha.getCurrentUser();
       const otherLogins = aioha.getOtherLogins();
       if (currentLoggedInUser === user.username.trim()) {
@@ -31,7 +32,6 @@ export const SwitchUserModal: React.FC<
       } else if (otherLogins && otherLogins[user.username.trim()]) {
         AuthService.removeUser(aioha, user.username.trim());
       }
-    if (user.privatePostingKey) {
       await AuthService.switchUserWithPrivatePostingKey(aioha, user.username, user.privatePostingKey, onSignMessage(user.username.trim().toLocaleLowerCase()));
     }
     AuthService.switchUser(aioha, user.username);
