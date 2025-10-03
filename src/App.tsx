@@ -26,8 +26,8 @@ const aioha = initAioha(
 
 function App() {
   const { currentUser, loggedInUsers } = useAuthStore();
-  const { loginWithPrivateKey } = useProgrammaticAuth(aioha);
-  const [selectedTab, setSelectedTab] = useState<ApiVideoFeedType>(ApiVideoFeedType.HOME);
+  const { loginWithPrivateKey, logout } = useProgrammaticAuth(aioha);
+  const [selectedTab, setSelectedTab] = useState<ApiVideoFeedType>(ApiVideoFeedType.SEARCH);
   const [searchQuery, setSearchQuery] = useState("");
   const [theme, setTheme] = useState<"light" | "dark">("light"); // Add theme state
   const user = "user-name-goes-here";
@@ -107,6 +107,15 @@ function App() {
         return JSON.stringify({ message: "Server validation successful" });
     });
     console.log("User logged in:", userInfo);
+  };
+
+  const handleProgrammaticLogout = async () => {
+    try {
+      await logout();
+      console.log("User logged out");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   const renderFeed = () => {
@@ -221,6 +230,9 @@ function App() {
               </div>
               <div className="card-actions justify-center mt-4">
                 <button onClick={handleProgrammaticLogin} className="btn btn-primary">Programmatic Login</button>
+              </div>
+              <div className="card-actions justify-center mt-4">
+                <button onClick={handleProgrammaticLogout} className="btn btn-secondary">Programmatic Logout</button>
               </div>
             </div>
           </div>
