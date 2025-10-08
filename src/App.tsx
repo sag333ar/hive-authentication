@@ -2,12 +2,9 @@ import { useEffect, useState } from "react";
 import { AuthButton } from "./components/AuthButton";
 import { useAuthStore } from "./store/authStore";
 import type { HiveAuthResult, LoggedInUser } from "./types/auth";
-import { ApiVideoFeedType, type VideoFeedItem } from "./types/video";
-import { VideoFeed } from "./components/video/VideoFeed";
 import { initAioha } from '@aioha/aioha'
 import { AiohaProvider } from '@aioha/react-provider'
 import { useProgrammaticAuth } from "./hooks/useProgrammaticAuth";
-import { BottomToolbarWithSlider } from "./components/BottomToolbarWithSlider";
 
 const aioha = initAioha(
   {
@@ -27,8 +24,6 @@ const aioha = initAioha(
 function App() {
   const { currentUser, loggedInUsers } = useAuthStore();
   const { loginWithPrivateKey, logout } = useProgrammaticAuth(aioha);
-  const [selectedTab, setSelectedTab] = useState<ApiVideoFeedType>(ApiVideoFeedType.SEARCH);
-  const [searchQuery, setSearchQuery] = useState("");
   const [theme, setTheme] = useState<"light" | "dark">("light"); // Add theme state
   const user = "user-name-goes-here";
   const key = "your-private-posting-key";
@@ -93,12 +88,6 @@ function App() {
       throw error;
     }
   };
-  const handleVideoClick = (video: VideoFeedItem) => {
-    console.log("Video clicked:", video.permlink, video.author);
-  };
-  const handleAuthorClick = (author: string) => {
-    console.log("Author clicked:", author);
-  };
 
   const handleProgrammaticLogin = async () => {
     const userInfo = await loginWithPrivateKey(user, key, async (hiveResult) => {
@@ -115,74 +104,6 @@ function App() {
       console.log("User logged out");
     } catch (error) {
       console.error("Logout failed:", error);
-    }
-  };
-
-  const renderFeed = () => {
-    switch (selectedTab) {
-      case ApiVideoFeedType.USER:
-        return (
-          currentUser && (
-            <VideoFeed
-              feedType={ApiVideoFeedType.USER}
-              username={currentUser.username}
-              onVideoClick={handleVideoClick}
-              onAuthorClick={handleAuthorClick}
-            />
-          )
-        );
-      case ApiVideoFeedType.HOME:
-        return (
-          <VideoFeed feedType={ApiVideoFeedType.HOME} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
-        );
-      case ApiVideoFeedType.TRENDING:
-        return (
-          <VideoFeed feedType={ApiVideoFeedType.TRENDING} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
-        );
-      case ApiVideoFeedType.NEW_VIDEOS:
-        return (
-          <VideoFeed feedType={ApiVideoFeedType.NEW_VIDEOS} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
-        );
-      case ApiVideoFeedType.FIRST_UPLOADS:
-        return (
-          <VideoFeed feedType={ApiVideoFeedType.FIRST_UPLOADS} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
-        );
-      case ApiVideoFeedType.COMMUNITY:
-        return (
-          <VideoFeed feedType={ApiVideoFeedType.COMMUNITY} communityId={'hive-163772'} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
-        );
-      case ApiVideoFeedType.RELATED:
-        return (
-          <VideoFeed feedType={ApiVideoFeedType.RELATED} onVideoClick={handleVideoClick} username={'viviana.fitness'} onAuthorClick={handleAuthorClick} />
-        );
-      case ApiVideoFeedType.TAG_FEED:
-        return (
-          <VideoFeed feedType={ApiVideoFeedType.TAG_FEED} tag={'neoxian'} onVideoClick={handleVideoClick} onAuthorClick={handleAuthorClick} />
-        );
-      case ApiVideoFeedType.SEARCH:
-        return (
-          <div className="space-y-4">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search videos..."
-              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            {searchQuery.length >= 4 ? (
-              <VideoFeed
-                feedType={ApiVideoFeedType.SEARCH}
-                tag={searchQuery}
-                onVideoClick={handleVideoClick}
-                onAuthorClick={handleAuthorClick}
-              />
-            ) : (
-              <p className="text-gray-500">Type at least 4 characters to search...</p>
-            )}
-          </div>
-        );
-      default:
-        return null;
     }
   };
 
@@ -280,32 +201,8 @@ function App() {
               </div>
             </div>
           )}
-          {/* Feed Tabs */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            {Object.values(ApiVideoFeedType).map((feed) => (
-              <button
-                key={feed}
-                onClick={() => setSelectedTab(feed)}
-                className={`px-4 py-2 rounded-lg ${selectedTab === feed
-                    ? "bg-primary text-white"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-500"
-                }`}
-              >
-                {feed.replace(/_/g, " ")}
-              </button>
-            ))}
-          </div>
 
         </div>
-        {/* Render Feeds */}
-        <div>
-          <h3 className="text-4xl">Video Feeds</h3>
-          {renderFeed()}
-        </div>
-      </div>
-
-      <div className="sticky bottom-0">
-        <BottomToolbarWithSlider />
       </div>
     </AiohaProvider>
   );
