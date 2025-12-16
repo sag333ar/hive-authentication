@@ -179,12 +179,12 @@ export const LoginDialog: React.FC<
 
       onClose();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      // const errorMessage = error instanceof Error ? error.message : 'Login failed';
       if (currentUser) {
         aioha.switchUser(currentUser.username);
         aioha.removeOtherLogin(username.trim());
       }
-      setError(errorMessage);
+      setError("Something went wrong. Try restarting keychain app & make sure you're connected to internet");
     }
   };
 
